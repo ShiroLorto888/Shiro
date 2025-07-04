@@ -9,10 +9,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         /* Styles from v58 (unchanged) */
         body { font-family: 'Sarabun', 'Inter', sans-serif; font-size: 16px; }
@@ -136,7 +132,7 @@
     <nav class="bg-gray-800 p-4 shadow-md mb-6">
         <div class="container mx-auto flex items-center justify-between relative">
             <div class="flex flex-wrap justify-center gap-x-5 gap-y-3">
-                <button id="menuBuyNumbers" data-page="pageBuyNumbers" class="menu-item">หน้า ซื้อเลข</button>
+                <button id="menuBuyNumbers" data-page="pageBuyNumbers" class="menu-item active">หน้า ซื้อเลข</button>
                 <button id="menu3digit" data-page="page3digit" class="menu-item">เลข3ตัว</button>
                 <button id="menu2digitTop" data-page="page2digitTop" class="menu-item">2ตัวบน</button>
                 <button id="menu2digitBottom" data-page="page2digitBottom" class="menu-item">2ตัวล่าง</button>
@@ -164,10 +160,12 @@
     </nav>
 
     <div id="pageContainer" class="container mx-auto mb-6">
+        <!-- NEW: Buy Numbers Page -->
         <div id="pageBuyNumbers" class="page-content active">
             <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg">
                 <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">หน้า ซื้อเลข</h1>
 
+                <!-- Customer Input Section -->
                 <div class="mb-8 p-6 bg-blue-50 rounded-md border border-blue-200">
                     <h2 class="text-xl font-bold text-blue-800 mb-4">ข้อมูลลูกค้า</h2>
                     <div>
@@ -181,6 +179,7 @@
                     </div>
                 </div>
 
+                <!-- Number Entry Section -->
                 <div class="mb-8 p-6 bg-gray-50 rounded-md border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">ป้อนเลขที่ซื้อ</h2>
 
@@ -217,6 +216,7 @@
                             <button id="btnBuyReversed" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150 hidden">ตัวกลับ</button>
                         </div>
                     </div>
+                    <!-- NEW: Quick Add Price Buttons -->
                     <div class="flex flex-wrap gap-2 mt-4" id="quickAddPriceButtons">
                         <button class="quick-add-price-btn" data-value="5">5</button>
                         <button class="quick-add-price-btn" data-value="10">10</button>
@@ -236,15 +236,19 @@
                         <button class="quick-add-price-btn" data-value="5000">5000</button>
                     </div>
                     <div id="confirmationMessageBuyNumbers" class="confirmation-message hidden">
-                        </div>
+                        <!-- Confirmation message for individual entry -->
+                    </div>
                 </div>
 
+                <!-- Current Customer Entries Summary -->
                 <div id="currentCustomerSummaryDiv" class="mb-8 p-6 bg-green-50 rounded-md border border-green-200 min-h-[100px] hidden">
                     <h2 class="text-xl font-bold text-green-800 mb-4">รายการที่กำลังบันทึกสำหรับ: <span id="currentCustomerNameDisplay"></span></h2>
                     <ul id="currentCustomerEntriesList" class="list-disc pl-5 space-y-1 text-gray-700">
-                        </ul>
+                        <!-- Entries will be dynamically added here -->
+                    </ul>
                 </div>
 
+                <!-- Action Buttons for Customer -->
                 <div class="flex justify-center gap-4 mb-8">
                     <button id="btnCloseCustomer" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg shadow transition duration-150 text-xl">
                         ปิดยอดลูกค้าคนนี้
@@ -254,6 +258,7 @@
                     </button>
                 </div>
 
+                <!-- Customer Total Check -->
                 <div class="mb-8 p-6 bg-blue-50 rounded-md border border-blue-200">
                     <h2 class="text-xl font-bold text-blue-800 mb-4">ตรวจสอบยอดรวมที่ลูกค้าแจ้ง</h2>
                     <div class="flex items-end gap-4">
@@ -268,13 +273,16 @@
                         </button>
                     </div>
                     <div id="buyComparisonResultDisplay" class="hidden mt-4 p-3 rounded-md text-center">
-                        </div>
+                        <!-- Comparison result will be displayed here -->
+                    </div>
                 </div>
 
+                <!-- All Customers Summary -->
                 <div class="mt-10 pt-8 border-t border-gray-300">
                     <h2 class="text-2xl font-bold text-indigo-700 mb-6 text-center">สรุปยอดของลูกค้าทั้งหมด</h2>
                     <div id="allCustomersSummaryContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        </div>
+                        <!-- Customer summary cards will be dynamically added here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -306,7 +314,8 @@
                     </div>
                 </div>
                 <div id="confirmationMessage3digit" class="confirmation-message hidden">
-                    </div>
+                    <!-- Confirmation message will appear here -->
+                </div>
                 <div class="table-section mb-8 overflow-x-auto">
                     <table id="table3digit" class="min-w-full bg-white border border-gray-300 rounded-md">
                         <thead class="bg-gray-200">
@@ -349,11 +358,13 @@
                         <button id="btnReversed2digitTop" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ตัวกลับ</button>
                         <button id="btnLimit2digitTop" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">อั้น</button>
                         <button id="btnExport2digitTop" class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export (หน้านี้)</button>
+                        <!-- เพิ่มปุ่ม Export เกิน -->
                         <button id="btnExport2digitTopExcess" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export เกิน</button>
                     </div>
                 </div>
                 <div id="confirmationMessage2digitTop" class="confirmation-message hidden">
-                    </div>
+                    <!-- Confirmation message will appear here -->
+                </div>
                 <div class="table-section mb-8 overflow-x-auto">
                     <table id="table2digitTop" class="min-w-full bg-white border border-gray-300 rounded-md">
                         <thead class="bg-gray-200">
@@ -397,7 +408,8 @@
                     </div>
                 </div>
                 <div id="confirmationMessage2digitBottom" class="confirmation-message hidden">
-                    </div>
+                    <!-- Confirmation message will appear here -->
+                </div>
                 <div class="table-section mb-8 overflow-x-auto">
                     <table id="table2digitBottom" class="min-w-full bg-white border border-gray-300 rounded-md">
                         <thead class="bg-gray-200">
@@ -441,7 +453,8 @@
                     </div>
                 </div>
                 <div id="confirmationMessageRunTop" class="confirmation-message hidden">
-                    </div>
+                    <!-- Confirmation message will appear here -->
+                </div>
                 <div class="table-section mb-8 overflow-x-auto">
                     <table id="tableRunTop" class="min-w-full bg-white border border-gray-300 rounded-md">
                         <thead class="bg-gray-200">
@@ -484,7 +497,8 @@
                     </div>
                 </div>
                 <div id="confirmationMessageRunBottom" class="confirmation-message hidden">
-                    </div>
+                    <!-- Confirmation message will appear here -->
+                </div>
                 <div class="table-section mb-8 overflow-x-auto">
                     <table id="tableRunBottom" class="min-w-full bg-white border border-gray-300 rounded-md">
                         <thead class="bg-gray-200">
@@ -527,7 +541,8 @@
                     </div>
                 </div>
                 <div id="confirmationMessageRun2Top" class="confirmation-message hidden">
-                    </div>
+                    <!-- Confirmation message will appear here -->
+                </div>
                 <div class="table-section mb-8 overflow-x-auto">
                     <table id="tableRun2Top" class="min-w-full bg-white border border-gray-300 rounded-md">
                         <thead class="bg-gray-200">
@@ -571,7 +586,8 @@
                     </div>
                 </div>
                 <div id="confirmationMessagePack4" class="confirmation-message hidden">
-                    </div>
+                    <!-- Confirmation message will appear here -->
+                </div>
                 <div class="table-section mb-8 overflow-x-auto">
                     <table id="tablePack4" class="min-w-full bg-white border border-gray-300 rounded-md">
                         <thead class="bg-gray-200">
@@ -614,7 +630,8 @@
                     </div>
                 </div>
                 <div id="confirmationMessagePack5" class="confirmation-message hidden">
-                    </div>
+                    <!-- Confirmation message will appear here -->
+                </div>
                 <div class="table-section mb-8 overflow-x-auto">
                     <table id="tablePack5" class="min-w-full bg-white border border-gray-300 rounded-md">
                         <thead class="bg-gray-200">
@@ -717,6 +734,7 @@
                         </button>
                     </div>
 
+                    <!-- NEW: Customer Total Comparison Section -->
                     <div class="mt-10 pt-8 border-t border-gray-300">
                         <h2 class="text-2xl font-bold text-indigo-700 mb-6 text-center">ตรวจสอบยอดรวมกับลูกค้า</h2>
                         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 p-6 bg-blue-50 rounded-md border border-blue-200">
@@ -731,8 +749,12 @@
                             </div>
                         </div>
                         <div id="comparisonResultDisplay" class="hidden mt-6">
-                            </div>
+                            <!-- Comparison result will be displayed here -->
+                        </div>
                     </div>
+                    <!-- END NEW SECTION -->
+
+                    <!-- NEW: Large Amount Confirmation Setting Section -->
                     <div class="mt-10 pt-8 border-t border-gray-300">
                         <h2 class="text-2xl font-bold text-indigo-700 mb-6 text-center">ตั้งค่าการยืนยันยอดสูง</h2>
                         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 p-6 bg-yellow-50 rounded-md border border-yellow-200">
@@ -747,9 +769,12 @@
                             </div>
                         </div>
                         <div id="largeAmountConfirmThresholdDisplay" class="mt-4 text-center text-gray-600 text-sm">
-                            </div>
+                            <!-- Current threshold will be displayed here -->
+                        </div>
                     </div>
-                    </div>
+                    <!-- END NEW SECTION -->
+
+                 </div>
             </div>
         </div>
 
@@ -769,7 +794,8 @@
                     </div>
                 </div>
                 <div id="confirmationMessageCloseNumbers" class="confirmation-message hidden">
-                    </div>
+                    <!-- Confirmation message will appear here -->
+                </div>
                 <div class="table-section mb-8 overflow-x-auto">
                     <table id="closeNumbersTable" class="min-w-full bg-white border border-gray-300 rounded-md">
                         <thead class="bg-gray-200">
@@ -800,7 +826,8 @@
                     </div>
                 </div>
                 <div id="confirmationMessageCloseNumbers2digit" class="confirmation-message hidden">
-                    </div>
+                    <!-- Confirmation message will appear here -->
+                </div>
                 <div class="table-section mb-8 overflow-x-auto">
                     <table id="closeNumbersTable2digit" class="min-w-full bg-white border border-gray-300 rounded-md">
                         <thead class="bg-gray-200">
@@ -900,9 +927,24 @@
         </div>
     </div>
 
-    <script>
-        // --- Firebase Integration START ---
-        const firebaseConfig = {
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase variables
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+        let unsubscribeSnapshot = null; // To store the unsubscribe function for real-time listener
+
+        // Use global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            // User provided config (fallback if __firebase_config is not available)
             apiKey: "AIzaSyCaXvsGBRdWddimVLgdcT5x7zhO_JvASp8",
             authDomain: "lotto-7fd8b.firebaseapp.com",
             projectId: "lotto-7fd8b",
@@ -912,80 +954,7 @@
             measurementId: "G-TTR8EXE58R"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        let currentUserId = null;
-        // --- Firebase Integration END ---
-
-
-        // --- Firebase Data Storage Functions START ---
-        async function saveData(type, dataObject) {
-            if (!currentUserId) return;
-            // Saves a single data type (e.g., 'lottoData3digit') to a document named after the user ID.
-            // The data is stored in a map field within that document.
-            const userDocRef = db.collection('users').doc(currentUserId);
-            try {
-                await userDocRef.set({
-                    [type]: dataObject
-                }, { merge: true }); // Use merge:true to avoid overwriting other data types in the same document.
-            } catch (error) {
-                console.error("Error saving data for type " + type + ": ", error);
-                await customAlert("เกิดข้อผิดพลาดในการบันทึกข้อมูลออนไลน์");
-            }
-        }
-
-        async function loadData(type) {
-            if (!currentUserId) return {};
-            const userDocRef = db.collection('users').doc(currentUserId);
-            try {
-                const doc = await userDocRef.get();
-                if (doc.exists && doc.data()[type]) {
-                    return doc.data()[type];
-                } else {
-                    return {}; // Return empty object if no data for this type yet
-                }
-            } catch (error) {
-                console.error("Error loading data for type " + type + ": ", error);
-                await customAlert("เกิดข้อผิดพลาดในการโหลดข้อมูลออนไลน์");
-                return {};
-            }
-        }
-        
-        // Generic function to save any top-level object (like limitThresholds, closedNumbers, etc.)
-        async function saveUserDataObject(objectName, dataObject) {
-            if (!currentUserId) return;
-            const userDocRef = db.collection('users').doc(currentUserId);
-             try {
-                await userDocRef.set({ [objectName]: dataObject }, { merge: true });
-            } catch (error) {
-                console.error(`Error saving ${objectName}: `, error);
-                await customAlert(`เกิดข้อผิดพลาดในการบันทึก ${objectName}`);
-            }
-        }
-        
-        // Generic function to load any top-level object
-        async function loadUserDataObject(objectName, defaultValue) {
-            if (!currentUserId) return defaultValue;
-            const userDocRef = db.collection('users').doc(currentUserId);
-            try {
-                const doc = await userDocRef.get();
-                if (doc.exists && doc.data()[objectName] !== undefined) {
-                    return doc.data()[objectName];
-                } else {
-                    return defaultValue;
-                }
-            } catch (error) {
-                console.error(`Error loading ${objectName}: `, error);
-                await customAlert(`เกิดข้อผิดพลาดในการโหลด ${objectName}`);
-                return defaultValue;
-            }
-        }
-
-        // --- Firebase Data Storage Functions END ---
-
-
+        // Global data storage
         let lottoData3digit = {};
         let lottoData2digitTop = {};
         let lottoData2digitBottom = {};
@@ -997,18 +966,16 @@
         let limitThresholds = {};
         let closedNumbers = [];
         let closedNumbers2digit = [];
-
-        let currentPageType = '3digit';
-        let currentGrandTotal = 0; // New global variable to store the grand total
-
-        // NEW: Buy Numbers Page Data
         let allCustomerBuyData = {}; // Stores { customerName: [{entries}, total, customerCheckTotal], ... }
+
+        // Current UI state variables
+        let currentPageType = '3digit';
+        let currentGrandTotal = 0;
         let currentCustomerName = '';
         let currentCustomerPendingEntries = []; // Temporary storage for entries before 'ปิดยอด'
         let currentBuyPageLottoType = '3digit'; // Default active type on buy page
 
-
-        // --- DOM Elements (Declared here, assigned in DOMContentLoaded) ---
+        // DOM Elements (Declared here, assigned in setupAllUIListeners)
         let pageContainer;
         let allPageContents;
         let menuItems;
@@ -1206,6 +1173,231 @@
         let buyComparisonResultDisplay;
         let allCustomersSummaryContainer;
         let quickAddPriceButtonsContainer; // New: Quick Add Price Buttons Container
+
+        // Flag to ensure UI listeners are set up only once
+        let areUILoadedAndListenersSetup = false;
+
+
+        // --- Firebase Initialization ---
+        async function initializeFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase Auth Ready. User ID:", userId);
+                    } else {
+                        try {
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                await signInWithCustomToken(auth, __initial_auth_token);
+                                userId = auth.currentUser.uid;
+                                console.log("Signed in with custom token. User ID:", userId);
+                            } else {
+                                await signInAnonymously(auth);
+                                userId = auth.currentUser.uid;
+                                console.log("Signed in anonymously. User ID:", userId);
+                            }
+                        } catch (error) {
+                            console.error("Error during anonymous sign-in or custom token sign-in:", error);
+                            // Fallback to a random ID if auth fails completely
+                            userId = crypto.randomUUID();
+                            console.log("Using random user ID as fallback:", userId);
+                        }
+                    }
+                    isAuthReady = true;
+                    if (userIdDisplay) userIdDisplay.textContent = `User ID: ${userId}`;
+
+                    // Now that auth is ready, set up real-time listener and load initial data, then update UI
+                    setupRealtimeDataListener();
+                    await loadInitialDataAndInitializeUI();
+                });
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                // If Firebase init fails, proceed with app logic without Firestore (will use empty data)
+                isAuthReady = false; // Ensure Firebase-dependent functions know it's not ready
+                userId = crypto.randomUUID(); // Still need a userId for local operations if no auth
+                if (userIdDisplay) userIdDisplay.textContent = `User ID: ${userId} (Offline)`;
+                await loadInitialDataAndInitializeUI(); // Initialize UI with empty data
+            }
+        }
+
+        // --- Firestore Data Management Functions ---
+        // Main document path for user-specific data
+        const getUserDataDocRef = () => {
+            if (!db || !userId) {
+                console.error("Firestore DB or User ID not available.");
+                return null;
+            }
+            return doc(db, `artifacts/${appId}/users/${userId}/lottoData/userLottoData`);
+        };
+
+        // Function to load all lotto data from Firestore initially
+        async function loadAllLottoDataFromFirestore() {
+            if (!isAuthReady || !db || !userId) {
+                console.warn("Auth not ready or Firebase not initialized for initial data loading.");
+                return {};
+            }
+            try {
+                const docRef = getUserDataDocRef();
+                if (!docRef) return {};
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    console.log("Loaded initial data from Firestore:", docSnap.data());
+                    return docSnap.data();
+                } else {
+                    console.log("No such document! Initializing new data in Firestore.");
+                    // Initialize with default empty structures if document doesn't exist
+                    const initialData = {
+                        lottoData_3digit: {},
+                        lottoData_2digitTop: {},
+                        lottoData_2digitBottom: {},
+                        lottoData_RunTop: {},
+                        lottoData_RunBottom: {},
+                        lottoData_Run2Top: {},
+                        lottoData_Pack4: {},
+                        lottoData_Pack5: {},
+                        limitThresholds: {},
+                        closedNumbers: [],
+                        closedNumbers2digit: [],
+                        allCustomerBuyData: {}
+                    };
+                    await setDoc(docRef, initialData); // Create the document
+                    return initialData;
+                }
+            } catch (error) {
+                console.error("Error loading all lotto data from Firestore:", error);
+                return {}; // Return empty object on error
+            }
+        }
+
+        // Function to save a specific key-value pair to the main Firestore document
+        async function saveLottoDataFieldToFirestore(key, data) {
+            if (!isAuthReady || !db || !userId) {
+                console.warn("Auth not ready or Firebase not initialized for data saving. Data not saved to Firestore.");
+                return;
+            }
+            try {
+                const docRef = getUserDataDocRef();
+                if (!docRef) return;
+                const update = {};
+                update[key] = data;
+                await updateDoc(docRef, update);
+                // console.log(`Saved ${key} to Firestore.`); // Too verbose for every small change
+            } catch (error) {
+                console.error(`Error saving ${key} to Firestore:`, error);
+            }
+        }
+
+        // Real-time listener for the main user data document
+        function setupRealtimeDataListener() {
+            if (!isAuthReady || !db || !userId) {
+                console.warn("Auth not ready or Firebase not initialized for real-time listener.");
+                return;
+            }
+            const docRef = getUserDataDocRef();
+            if (docRef) {
+                // Unsubscribe from previous listener if exists
+                if (unsubscribeSnapshot) {
+                    unsubscribeSnapshot();
+                }
+                unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const newData = docSnap.data();
+                        console.log("Real-time update from Firestore:", newData);
+
+                        // Update global state with new data
+                        lottoData3digit = newData.lottoData_3digit || {};
+                        lottoData2digitTop = newData.lottoData_2digitTop || {};
+                        lottoData2digitBottom = newData.lottoData_2digitBottom || {};
+                        lottoDataRunTop = newData.lottoData_RunTop || {};
+                        lottoDataRunBottom = newData.lottoData_RunBottom || {};
+                        lottoDataRun2Top = newData.lottoData_Run2Top || {};
+                        lottoDataPack4 = newData.lottoData_Pack4 || {};
+                        lottoDataPack5 = newData.lottoData_Pack5 || {};
+                        limitThresholds = newData.limitThresholds || {};
+                        closedNumbers = newData.closedNumbers || [];
+                        closedNumbers2digit = newData.closedNumbers2digit || [];
+                        allCustomerBuyData = newData.allCustomerBuyData || {};
+
+                        // Re-render UI based on updated global state
+                        updateUIWithCurrentData();
+                    } else {
+                        console.log("User data document does not exist after snapshot. It might have been cleared.");
+                        // Optionally re-initialize if the document was deleted
+                        // This case is handled by loadAllLottoDataFromFirestore when it creates a new document
+                    }
+                }, (error) => {
+                    console.error("Error listening to Firestore document:", error);
+                });
+            }
+        }
+
+        // --- Data Storage (Now uses Firebase functions) ---
+        async function loadData(type) {
+            // Data is now managed by global variables updated by onSnapshot
+            // This function simply returns the current state of the global variable
+            switch (type) {
+                case '3digit': return lottoData3digit;
+                case '2digitTop': return lottoData2digitTop;
+                case '2digitBottom': return lottoData2digitBottom;
+                case 'RunTop': return lottoDataRunTop;
+                case 'RunBottom': return lottoDataRunBottom;
+                case 'Run2Top': return lottoDataRun2Top;
+                case 'Pack4': return lottoDataPack4;
+                case 'Pack5': return lottoDataPack5;
+                default: return {};
+            }
+        }
+
+        async function saveData(type, dataObject) {
+            // Update global variable immediately, then save to Firestore
+            switch (type) {
+                case '3digit': lottoData3digit = dataObject; break;
+                case '2digitTop': lottoData2digitTop = dataObject; break;
+                case '2digitBottom': lottoData2digitBottom = dataObject; break;
+                case 'RunTop': lottoDataRunTop = dataObject; break;
+                case 'RunBottom': lottoDataRunBottom = dataObject; break;
+                case 'Run2Top': lottoDataRun2Top = dataObject; break;
+                case 'Pack4': lottoDataPack4 = dataObject; break;
+                case 'Pack5': lottoDataPack5 = dataObject; break;
+            }
+            await saveLottoDataFieldToFirestore(`lottoData_${type}`, dataObject);
+        }
+
+        async function loadLimitThresholdsData() {
+            return limitThresholds;
+        }
+
+        async function saveLimitThresholdsData() {
+            await saveLottoDataFieldToFirestore('limitThresholds', limitThresholds);
+        }
+
+        async function loadClosedNumbersData() {
+            return closedNumbers;
+        }
+
+        async function saveClosedNumbersData() {
+            await saveLottoDataFieldToFirestore('closedNumbers', closedNumbers);
+        }
+
+        async function loadClosedNumbers2digitData() {
+            return closedNumbers2digit;
+        }
+
+        async function saveClosedNumbers2digitData() {
+            await saveLottoDataFieldToFirestore('closedNumbers2digit', closedNumbers2digit);
+        }
+
+        async function loadAllCustomerBuyDataData() {
+            return allCustomerBuyData;
+        }
+
+        async function saveAllCustomerBuyDataData() {
+            await saveLottoDataFieldToFirestore('allCustomerBuyData', allCustomerBuyData);
+        }
 
 
         // --- Generic Modal Functions ---
@@ -1444,14 +1636,15 @@
         // --- GUI Update Functions ---
         async function updateTable(type) {
             let data, tableBody, tableFooter;
-            if (type === '3digit') { data = lottoData3digit; tableBody = tableBody3digit; tableFooter = tableFooter3digit; }
-            else if (type === '2digitTop') { data = lottoData2digitTop; tableBody = tableBody2digitTop; tableFooter = tableFooter2digitTop; }
-            else if (type === '2digitBottom') { data = lottoData2digitBottom; tableBody = tableBody2digitBottom; tableFooter = tableFooter2digitBottom; }
-            else if (type === 'RunTop') { data = lottoDataRunTop; tableBody = tableBodyRunTop; tableFooter = tableFooterRunTop; }
-            else if (type === 'RunBottom') { data = lottoDataRunBottom; tableBody = tableBodyRunBottom; tableFooter = tableFooterRunBottom; }
-            else if (type === 'Run2Top') { data = lottoDataRun2Top; tableBody = tableBodyRun2Top; tableFooter = tableFooterRun2Top; }
-            else if (type === 'Pack4') { data = lottoDataPack4; tableBody = tableBodyPack4; tableFooter = tableFooterPack4; }
-            else if (type === 'Pack5') { data = lottoDataPack5; tableBody = tableBodyPack5; tableFooter = tableFooterPack5; }
+            data = await loadData(type); // Load current data
+            if (type === '3digit') { tableBody = tableBody3digit; tableFooter = tableFooter3digit; }
+            else if (type === '2digitTop') { tableBody = tableBody2digitTop; tableFooter = tableFooter2digitTop; }
+            else if (type === '2digitBottom') { tableBody = tableBody2digitBottom; tableFooter = tableFooter2digitBottom; }
+            else if (type === 'RunTop') { tableBody = tableBodyRunTop; tableFooter = tableFooterRunTop; }
+            else if (type === 'RunBottom') { tableBody = tableBodyRunBottom; tableFooter = tableFooterRunBottom; }
+            else if (type === 'Run2Top') { tableBody = tableBodyRun2Top; tableFooter = tableFooterRun2Top; }
+            else if (type === 'Pack4') { tableBody = tableBodyPack4; tableFooter = tableFooterPack4; }
+            else if (type === 'Pack5') { tableBody = tableBodyPack5; tableFooter = tableFooterPack5; }
             else { return; }
 
             // Defensive check: Ensure elements exist before manipulating
@@ -1533,10 +1726,9 @@
                     <td></td> `;
             }
             tableFooter.appendChild(footerRow);
-            await saveData(type, data);
         }
 
-        function updateGrandTotalSummary() {
+        async function updateGrandTotalSummary() {
             // Defensive check: Ensure element exists
             if (!grandTotalSummarySection) {
                 console.warn("updateGrandTotalSummary: grandTotalSummarySection not found.");
@@ -1544,7 +1736,11 @@
             }
 
             let calculatedGrandTotal = 0; // Use a local variable first
-            const allDataObjects = [lottoData3digit, lottoData2digitTop, lottoData2digitBottom, lottoDataRunTop, lottoDataRunBottom, lottoDataRun2Top, lottoDataPack4, lottoDataPack5];
+            const allDataObjects = [
+                await loadData('3digit'), await loadData('2digitTop'), await loadData('2digitBottom'),
+                await loadData('RunTop'), await loadData('RunBottom'), await loadData('Run2Top'),
+                await loadData('Pack4'), await loadData('Pack5')
+            ];
 
             allDataObjects.forEach(dataObject => {
                 Object.values(dataObject).forEach(item => {
@@ -1611,9 +1807,9 @@
              } else {
                  limitThresholds[`${type}_straight`] = 0;
              }
-             await saveUserDataObject('limitThresholds', limitThresholds);
+             await saveLimitThresholdsData(); // Save to Firestore
              updateLimitIndicator(type);
-             await updateTable(type);
+             await updateTable(type); // Ensure table updates after limit change
              await customAlert('ลบราคาอั้นเรียบร้อยแล้ว'); // Use custom alert
          }
 
@@ -1622,8 +1818,9 @@
                 console.warn("updateCloseNumbersTable: closeNumbersTableBody not found.");
                 return;
             }
+            const currentClosedNumbers = await loadClosedNumbersData(); // Load current data
             closeNumbersTableBody.innerHTML = '';
-            closedNumbers.forEach((number, index) => {
+            currentClosedNumbers.forEach((number, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="border-b border-gray-200">${number}</td>
@@ -1633,7 +1830,6 @@
                     </td>`;
                 closeNumbersTableBody.appendChild(row);
             });
-            await saveUserDataObject('closedNumbers', closedNumbers);
         }
 
         async function updateCloseNumbersTable2digit() {
@@ -1641,8 +1837,9 @@
                 console.warn("updateCloseNumbersTable2digit: closeNumbersTableBody2digit not found.");
                 return;
             }
+            const currentClosedNumbers2digit = await loadClosedNumbers2digitData(); // Load current data
             closeNumbersTableBody2digit.innerHTML = '';
-            closedNumbers2digit.forEach((number, index) => {
+            currentClosedNumbers2digit.forEach((number, index) => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="border-b border-gray-200">${number}</td>
@@ -1652,19 +1849,36 @@
                     </td>`;
                 closeNumbersTableBody2digit.appendChild(row);
             });
-            await saveUserDataObject('closedNumbers2digit', closedNumbers2digit);
         }
 
-        function clearAllDataInMemory() {
-            lottoData3digit = {}; lottoData2digitTop = {}; lottoData2digitBottom = {};
-            lottoDataRunTop = {}; lottoDataRunBottom = {}; lottoDataRun2Top = {};
-            lottoDataPack4 = {}; lottoDataPack5 = {}; limitThresholds = {};
-            closedNumbers = [];
-            closedNumbers2digit = [];
-            allCustomerBuyData = {}; // Clear customer buy data as well
-            currentCustomerPendingEntries = []; // Clear current pending entries
-            currentCustomerName = ''; // Clear current customer name
-            console.log("In-memory data cleared.");
+        async function clearAllDataInFirestore() {
+            if (!isAuthReady || !db || !userId) {
+                console.warn("Firebase not ready, cannot clear data from Firestore.");
+                return;
+            }
+            const docRef = getUserDataDocRef();
+            if (docRef) {
+                try {
+                    await setDoc(docRef, {
+                        lottoData_3digit: {},
+                        lottoData_2digitTop: {},
+                        lottoData_2digitBottom: {},
+                        lottoData_RunTop: {},
+                        lottoData_RunBottom: {},
+                        lottoData_Run2Top: {},
+                        lottoData_Pack4: {},
+                        lottoData_Pack5: {},
+                        limitThresholds: {},
+                        closedNumbers: [],
+                        closedNumbers2digit: [],
+                        allCustomerBuyData: {}
+                    });
+                    console.log("All data cleared from Firestore.");
+                } catch (error) {
+                    console.error("Error clearing all data from Firestore:", error);
+                    throw error; // Re-throw to be caught by calling function
+                }
+            }
         }
 
 
@@ -1887,7 +2101,7 @@
 
         function setupEditModalListeners() {
             if (editModalOkBtn) {
-                editModalOkBtn.addEventListener('click', async () => {
+                editModalOkBtn.addEventListener('click', () => {
                     if (currentEditModalResolve) {
                         const newStraight = parseFloat(editStraightInput ? editStraightInput.value : 0);
                         const newBoxed = (currentEditType === '3digit') ? parseFloat(editBoxedInput ? editBoxedInput.value : 0) : 0;
@@ -1932,8 +2146,7 @@
 
         // --- Page Switching ---
         async function setActiveMenu(menuId) {
-             const menuMapping = {
-                'menuBuyNumbers': 'pageBuyNumbers',
+            const menuMapping = {
                 'menu3digit': 'page3digit',
                 'menu2digitTop': 'page2digitTop',
                 'menu2digitBottom': 'page2digitBottom',
@@ -1945,45 +2158,58 @@
                 'menuCloseNumbers': 'pageCloseNumbers',
                 'menuCloseNumbers2digit': 'pageCloseNumbers2digit',
                 'dropdownExportBtn': 'pageExport',
+                'menuBuyNumbers': 'pageBuyNumbers', // NEW: Buy Numbers page
             };
-            const pageId = menuMapping[menuId];
-            if (!pageId) return;
+            const pageId = menuMapping[menuId] || menuId;
 
             allPageContents.forEach(page => page.classList.remove('active'));
-            const pageToShow = document.getElementById(pageId);
-            if(pageToShow) pageToShow.classList.add('active');
-
+            document.getElementById(pageId).classList.add('active');
 
             menuItems.forEach(item => item.classList.remove('active'));
             const clickedMenuElement = document.getElementById(menuId);
-            if (clickedMenuElement && clickedMenuElement.classList.contains('menu-item')) {
-                 clickedMenuElement.classList.add('active');
+            if (clickedMenuElement) {
+                if (clickedMenuElement.classList.contains('menu-item')) {
+                    clickedMenuElement.classList.add('active');
+                }
             }
-
             if (dropdownMenu) dropdownMenu.classList.add('hidden');
 
-            // Navigation Fix/Update: Await data updates before showing the page content fully
-            const type = pageId.replace('page', '');
-            if (type && type !== 'Export' && type !== 'CloseNumbers' && type !== 'CloseNumbers2digit' && type !== 'BuyNumbers') {
-                await updateTable(type);
-                updateLimitIndicator(type);
-            } else if (type === 'CloseNumbers') {
-                await updateCloseNumbersTable();
-            } else if (type === 'CloseNumbers2digit') {
-                await updateCloseNumbersTable2digit();
-            } else if (type === 'BuyNumbers') {
-                updateCurrentCustomerSummaryDisplay();
-                updateAllCustomersSummaryDisplay();
-                buyNumberInput.maxLength = getNumberLengthByType(currentBuyPageLottoType);
-                buyNumberInput.placeholder = 'X'.repeat(getNumberLengthByType(currentBuyPageLottoType));
+            const currentPageType = pageId.replace('page', '');
+            if (currentPageType && currentPageType !== 'Export' && currentPageType !== 'CloseNumbers' && currentPageType !== 'CloseNumbers2digit' && currentPageType !== 'BuyNumbers') {
+                await updateTable(currentPageType); // Ensure data is loaded and table updated
+                updateLimitIndicator(currentPageType);
+            } else if (currentPageType === 'CloseNumbers') {
+                await updateCloseNumbersTable(); // Ensure data is loaded and table updated
+            } else if (currentPageType === 'CloseNumbers2digit') {
+                await updateCloseNumbersTable2digit(); // Ensure data is loaded and table updated
+            } else if (currentPageType === 'BuyNumbers') {
+                updateCurrentCustomerSummaryDisplay(); // Re-display current customer data
+                updateAllCustomersSummaryDisplay(); // Re-display all customer summaries
+                // Ensure inputs are ready for current type
+                if (buyNumberInput) {
+                    buyNumberInput.maxLength = getNumberLengthByType(currentBuyPageLottoType);
+                    buyNumberInput.placeholder = 'X'.repeat(getNumberLengthByType(currentBuyPageLottoType));
+                }
                 updateBuyPageActionButtons();
-                 if (buyPageTypeSelector) {
+                // Set the active button in the type selector on the buy page
+                if (buyPageTypeSelector) { // Defensive check
                     buyPageTypeSelector.querySelectorAll('.buy-type-btn').forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.type === currentBuyPageLottoType);
-                        btn.classList.toggle('bg-blue-500', btn.dataset.type === currentBuyPageLottoType);
-                        btn.classList.toggle('text-white', btn.dataset.type === currentBuyPageLottoType);
-                        btn.classList.toggle('bg-gray-300', btn.dataset.type !== currentBuyPageLottoType);
-                        btn.classList.toggle('text-gray-800', btn.dataset.type !== currentBuyPageLottoType);
+                        btn.classList.remove('active');
+                        btn.classList.remove('bg-blue-500');
+                        btn.classList.remove('hover:bg-blue-600');
+                        btn.classList.remove('text-white');
+                        btn.classList.add('bg-gray-300');
+                        btn.classList.add('hover:bg-gray-400');
+                        btn.classList.add('text-gray-800');
+                        if (btn.dataset.type === currentBuyPageLottoType) {
+                            btn.classList.add('active');
+                            btn.classList.remove('bg-gray-300');
+                            btn.classList.remove('hover:bg-gray-400');
+                            btn.classList.remove('text-gray-800');
+                            btn.classList.add('bg-blue-500');
+                            btn.classList.add('hover:bg-blue-600');
+                            btn.classList.add('text-white');
+                        }
                     });
                 }
             }
@@ -2001,6 +2227,22 @@
             const btnLimit = document.getElementById(`btnLimit${type}`);
             const btnExport = document.getElementById(`btnExport${type}`);
             const btnExportExcess = document.getElementById(`btnExport${type}Excess`);
+            const tableBody = document.getElementById(`lottoTableBody${type}`);
+            const tableFooter = document.getElementById(`lottoTableFooter${type}`);
+            const confirmationMessageDiv = document.getElementById(`confirmationMessage${type}`);
+
+            // Helper to display confirmation message
+            const displayConfirmationMessageLocal = (message) => {
+                if (confirmationMessageDiv) {
+                    confirmationMessageDiv.textContent = message;
+                    confirmationMessageDiv.classList.remove('hidden');
+                    setTimeout(() => {
+                        confirmationMessageDiv.classList.add('hidden');
+                        confirmationMessageDiv.textContent = '';
+                    }, 3000);
+                }
+            };
+
 
             const addOrUpdateLottoEntry = async (num, p, buyType) => {
                 if (numberInput) highlightError(numberInput, false);
@@ -2008,25 +2250,23 @@
 
                 const confirmThreshold = Number(limitThresholds['global_large_amount_confirm']) || 0;
 
-                let lottoDataObject;
-                if (type === '3digit') { lottoDataObject = lottoData3digit; }
-                else if (type === '2digitTop') { lottoDataObject = lottoData2digitTop; }
-                else if (type === '2digitBottom') { lottoDataObject = lottoData2digitBottom; }
-                else if (type === 'RunTop') { lottoDataObject = lottoDataRunTop; }
-                else if (type === 'RunBottom') { lottoDataObject = lottoDataRunBottom; }
-                else if (type === 'Run2Top') { lottoDataObject = lottoDataRun2Top; }
-                else if (type === 'Pack4') { lottoDataObject = lottoDataPack4; }
-                else if (type === 'Pack5') { lottoDataObject = lottoDataPack5; }
-                else {
-                    await customAlert('ไม่รองรับประเภทหวยที่เลือก');
-                    return;
+                let lottoDataObject = await loadData(type); // Load latest data
+                let limitThresholdStraight = 0;
+                let limitThresholdBoxed = 0; // Only for 3digit
+
+                if (type === '3digit') {
+                    limitThresholdStraight = Number(limitThresholds[`${type}_straight`]) || 0;
+                    limitThresholdBoxed = Number(limitThresholds[`${type}_boxed`]) || 0;
+                } else {
+                    limitThresholdStraight = Number(limitThresholds[`${type}_straight`]) || 0;
                 }
 
+                // Initial confirmation for large single amount
                 if (confirmThreshold > 0 && p >= confirmThreshold) {
                     const confirmed = await customConfirm(`คุณกำลังจะเพิ่มเลข ${num} ด้วยราคา ${formatPrice(p)} บาท ใช่หรือไม่?`, 'ยืนยันยอดสูง');
                     if (!confirmed) {
                         console.log("Large amount entry cancelled by user.");
-                        return;
+                        return; // Stop the operation
                     }
                 }
 
@@ -2038,13 +2278,12 @@
                     lottoDataObject[num].straight += p;
                 } else if (buyType === 'boxed' && type === '3digit') {
                     lottoDataObject[num].boxed += p;
-                } else {
+                } else { // Reversed, Run, Pack will typically use 'straight'
                     lottoDataObject[num].straight += p;
                 }
 
-                await updateTable(type); // Now async
-                updateGrandTotalSummary();
-                displayConfirmationMessage(type, `เพิ่ม ${num} ราคา ${formatPrice(p)} บาท เรียบร้อยแล้ว`);
+                await saveData(type, lottoDataObject); // Save to Firestore
+                displayConfirmationMessageLocal(`เพิ่ม ${num} ราคา ${formatPrice(p)} บาท เรียบร้อยแล้ว`);
                 clearInputs(type);
             };
 
@@ -2091,6 +2330,7 @@
                     if (!validationResult) return;
                     const { number: n, price: p } = validationResult;
                     const perms = getPermutations(n);
+                    const typeForModal = (type === '3digit') ? '3digit' : '2digit';
                     const results = await showPriceModal(type, 'reversed', 'ราคาตัวกลับ', `เลือกเลขและแก้ไขราคา:`, p, true, perms);
 
                     if (results !== null && Array.isArray(results)) {
@@ -2100,18 +2340,22 @@
                         const confirmThreshold = Number(limitThresholds['global_large_amount_confirm']) || 0;
                         if (confirmThreshold > 0 && totalBatchPrice >= confirmThreshold && p < confirmThreshold) {
                             const confirmed = await customConfirm(`คุณกำลังจะเพิ่มเลขกลับรวม ${results.length} รายการ ด้วยยอดรวม ${formatPrice(totalBatchPrice)} บาท ใช่หรือไม่?`, 'ยืนยันยอดสูง');
-                            if (!confirmed) return;
+                            if (!confirmed) {
+                                console.log("Large amount reversed entry cancelled by user.");
+                                return;
+                            }
                         }
 
                         for (const item of results) {
+                            // Re-check closed status for each permutation from the modal
                             const isPermutationClosed = (type === '3digit') ? isNumberClosed(item.number) : isNumberClosed2digit(item.number);
                             if (isPermutationClosed) {
                                 await customAlert(`เลขกลับ ${item.number} เป็นเลขปิด ไม่สามารถเพิ่มได้`);
-                                continue;
+                                continue; // Skip this permutation
                             }
-                            await addOrUpdateLottoEntry(item.number, item.price, 'straight');
+                            await addOrUpdateLottoEntry(item.number, item.price, 'straight'); // Reversed are stored as straight
                         }
-                        displayConfirmationMessage(type, `เพิ่มเลขกลับ ${results.length} รายการ ยอดรวม ${formatPrice(totalBatchPrice)} บาท เรียบร้อยแล้ว`);
+                        displayConfirmationMessageLocal(`เพิ่มเลขกลับ ${results.length} รายการ ยอดรวม ${formatPrice(totalBatchPrice)} บาท เรียบร้อยแล้ว`);
                     }
                     clearInputs(type);
                 });
@@ -2126,26 +2370,33 @@
 
                     if (result !== null) {
                         let totalBoxedPrice = 0;
-                        if (result.addStraight) totalBoxedPrice += result.straightPrice;
-                        if (result.addBoxed) totalBoxedPrice += result.boxedPrice;
-
-                        const confirmThreshold = Number(limitThresholds['global_large_amount_confirm']) || 0;
-                        if (confirmThreshold > 0 && totalBoxedPrice >= confirmThreshold && p < confirmThreshold) {
-                           const confirmed = await customConfirm(`คุณกำลังจะเพิ่มเลข ${n} (ตัวโต๊ด) ด้วยยอดรวม ${formatPrice(totalBoxedPrice)} บาท ใช่หรือไม่?`, 'ยืนยันยอดสูง');
-                           if (!confirmed) return;
+                        let addedAny = false;
+                        if (result.addStraight) {
+                            // No need to check for closed number here, it's checked in addOrUpdateLottoEntry
+                            const added = await addOrUpdateLottoEntry(n, result.straightPrice, 'straight');
+                            if (added) { // Check if addOrUpdateLottoEntry actually added it (e.g., not cancelled by confirm)
+                                totalBoxedPrice += result.straightPrice;
+                                addedAny = true;
+                            }
+                        }
+                        if (result.addBoxed) {
+                            // No need to check for closed number here, it's checked in addOrUpdateLottoEntry
+                            const added = await addOrUpdateLottoEntry(n, result.boxedPrice, 'boxed');
+                            if (added) {
+                                totalBoxedPrice += result.boxedPrice;
+                                addedAny = true;
+                            }
                         }
 
-                        if (result.addStraight) await addOrUpdateLottoEntry(n, result.straightPrice, 'straight');
-                        if (result.addBoxed) await addOrUpdateLottoEntry(n, result.boxedPrice, 'boxed');
-                        
-                        if (result.addStraight || result.addBoxed) {
-                           displayConfirmationMessage(type, `เพิ่มเลข ${n} (ตัวโต๊ด) ยอดรวม ${formatPrice(totalBoxedPrice)} บาท เรียบร้อยแล้ว`);
+                        if (addedAny) {
+                             displayConfirmationMessageLocal(`เพิ่มเลข ${n} (ตัวโต๊ด) ยอดรวม ${formatPrice(totalBoxedPrice)} บาท เรียบร้อยแล้ว`);
                         }
                     }
                     clearInputs(type);
                 });
             }
 
+            // For Run and Pack types, they only have an "Add" button
             if (btnAddRun) {
                 btnAddRun.addEventListener('click', async () => {
                     const validationResult = validationForAdd();
@@ -2161,14 +2412,14 @@
                      if (result !== null) {
                          if (type === '3digit') {
                              limitThresholds[`${type}_straight`] = result;
-                             limitThresholds[`${type}_boxed`] = result;
+                             limitThresholds[`${type}_boxed`] = result; // Apply to both straight and boxed for 3-digit
                          } else {
                              limitThresholds[`${type}_straight`] = result;
                          }
-                         await saveUserDataObject('limitThresholds', limitThresholds);
+                         await saveLimitThresholdsData(); // Save to Firestore
                          updateLimitIndicator(type);
-                         await updateTable(type);
-                         await customAlert(`ตั้งค่าราคาอั้นสำหรับ ${getLottoTypeDisplayName(type)} เป็น ${formatPrice(result)} บาทเรียบร้อยแล้ว`);
+                         await updateTable(type); // Update table to reflect new limits
+                         await customAlert(`ตั้งค่าราคาอั้นสำหรับ ${type} เป็น ${formatPrice(result)} บาทเรียบร้อยแล้ว`);
                      }
                  });
              }
@@ -2178,7 +2429,7 @@
                     const result = await showPriceModal(type, 'global_limit', 'ตั้งค่าราคาอั้น (โต๊ด)', 'ตั้งค่าราคาอั้นสูงสุดสำหรับเลขโต๊ด:');
                     if (result !== null) {
                         limitThresholds[`${type}_boxed`] = result;
-                        await saveUserDataObject('limitThresholds', limitThresholds);
+                        await saveLimitThresholdsData(); // Save to Firestore
                         updateLimitIndicator(type);
                         await updateTable(type);
                         await customAlert(`ตั้งค่าราคาอั้น (โต๊ด) สำหรับ 3 ตัว เป็น ${formatPrice(result)} บาทเรียบร้อยแล้ว`);
@@ -2189,7 +2440,7 @@
             if (btnExport) {
                 btnExport.addEventListener('click', () => exportTableToExcel(type));
             }
-             if (btnExportExcess && type === '2digitTop') {
+             if (btnExportExcess && type === '2digitTop') { // Specific for 2digitTop excess
                 btnExportExcess.addEventListener('click', () => exportExcessTableToExcel(type));
             }
 
@@ -2205,8 +2456,12 @@
                 priceInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' || e.keyCode === 13) {
                         e.preventDefault();
-                        if (btnStraight) btnStraight.click();
-                        else if (btnAddRun) btnAddRun.click();
+                        // Simulate click on appropriate button based on type
+                        if (btnStraight) {
+                            btnStraight.click();
+                        } else if (btnAddRun) {
+                            btnAddRun.click();
+                        }
                     }
                 });
             }
@@ -2234,16 +2489,7 @@
                     const number = target.dataset.number;
                     if (!number) return;
 
-                    let lottoDataObject;
-                    if (type === '3digit') lottoDataObject = lottoData3digit;
-                    else if (type === '2digitTop') lottoDataObject = lottoData2digitTop;
-                    else if (type === '2digitBottom') lottoDataObject = lottoData2digitBottom;
-                    else if (type === 'RunTop') lottoDataObject = lottoDataRunTop;
-                    else if (type === 'RunBottom') lottoDataObject = lottoDataRunBottom;
-                    else if (type === 'Run2Top') lottoDataObject = lottoDataRun2Top;
-                    else if (type === 'Pack4') lottoDataObject = lottoDataPack4;
-                    else if (type === 'Pack5') lottoDataObject = lottoDataPack5;
-                    else return;
+                    let lottoDataObject = await loadData(type); // Load latest data
 
                     if (target.classList.contains('edit-btn')) {
                         const itemData = lottoDataObject[number];
@@ -2252,51 +2498,52 @@
                         const result = await showEditModal(number, type, itemData.straight, itemData.boxed);
                         if (result !== null) {
                             lottoDataObject[number].straight = result.straight;
-                            lottoDataObject[number].boxed = result.boxed;
-                            await updateTable(type);
-                            updateGrandTotalSummary();
+                            lottoDataObject[number].boxed = result.boxed; // Will be 0 for non-3digit
+                            await saveData(type, lottoDataObject); // Save to Firestore
                             await customAlert(`แก้ไขเลข ${number} เรียบร้อยแล้ว`);
                         }
                     } else if (target.classList.contains('delete-btn')) {
                         const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบเลข ${number} ออกจากรายการ ${getLottoTypeDisplayName(type)}?`);
                         if (confirmed) {
                             delete lottoDataObject[number];
-                            await updateTable(type);
-                            updateGrandTotalSummary();
+                            await saveData(type, lottoDataObject); // Save to Firestore
                             await customAlert(`ลบเลข ${number} เรียบร้อยแล้ว`);
                         }
                     }
                 });
             }
-            
+            // Event listeners for close number tables
             if (closeNumbersTableBody) {
                 closeNumbersTableBody.addEventListener('click', async (e) => {
                     const target = e.target;
                     const index = parseInt(target.dataset.index);
                     if (isNaN(index)) return;
 
+                    let currentClosedNumbers = await loadClosedNumbersData(); // Load latest data
+
                     if (target.classList.contains('edit-close-number-btn')) {
-                        const currentNumber = closedNumbers[index];
+                        const currentNumber = currentClosedNumbers[index];
                         const newNumber = await customPrompt(`แก้ไขเลขปิด 3 หลัก:`, currentNumber);
                         if (newNumber !== null && newNumber.trim() !== '') {
                             if (!validateNDigitInput(newNumber.trim(), 3)) {
-                                await customAlert('กรุณาป้อนเลข 3 หลักให้ถูกต้อง'); return;
+                                await customAlert('กรุณาป้อนเลข 3 หลักให้ถูกต้อง');
+                                return;
                             }
-                            if (closedNumbers.includes(newNumber.trim()) && newNumber.trim() !== currentNumber) {
-                                await customAlert(`เลข ${newNumber.trim()} ถูกปิดไว้แล้ว`); return;
+                            if (currentClosedNumbers.includes(newNumber.trim()) && newNumber.trim() !== currentNumber) {
+                                await customAlert(`เลข ${newNumber.trim()} ถูกปิดไว้แล้ว`);
+                                return;
                             }
-                            closedNumbers[index] = newNumber.trim();
-                            closedNumbers.sort();
-                            await updateCloseNumbersTable();
+                            currentClosedNumbers[index] = newNumber.trim();
+                            currentClosedNumbers.sort();
+                            await saveClosedNumbersData(); // Save to Firestore
                             await customAlert(`แก้ไขเลขปิดเป็น ${newNumber.trim()} เรียบร้อยแล้ว`);
                         }
                     } else if (target.classList.contains('delete-close-number-btn')) {
-                        const numberToDelete = closedNumbers[index];
-                        const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบเลขปิด ${numberToDelete}?`);
+                        const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบเลขปิด ${currentClosedNumbers[index]}?`);
                         if (confirmed) {
-                            closedNumbers.splice(index, 1);
-                            await updateCloseNumbersTable();
-                            await customAlert(`ลบเลขปิด ${numberToDelete} เรียบร้อยแล้ว`);
+                            currentClosedNumbers.splice(index, 1);
+                            await saveClosedNumbersData(); // Save to Firestore
+                            await customAlert(`ลบเลขปิด ${currentClosedNumbers[index]} เรียบร้อยแล้ว`);
                         }
                     }
                 });
@@ -2308,28 +2555,31 @@
                     const index = parseInt(target.dataset.index);
                     if (isNaN(index)) return;
 
+                    let currentClosedNumbers2digit = await loadClosedNumbers2digitData(); // Load latest data
+
                     if (target.classList.contains('edit-close-number-btn')) {
-                        const currentNumber = closedNumbers2digit[index];
+                        const currentNumber = currentClosedNumbers2digit[index];
                         const newNumber = await customPrompt(`แก้ไขเลขปิด 2 หลัก:`, currentNumber);
                         if (newNumber !== null && newNumber.trim() !== '') {
                             if (!validateNDigitInput(newNumber.trim(), 2)) {
-                                await customAlert('กรุณาป้อนเลข 2 หลักให้ถูกต้อง'); return;
+                                await customAlert('กรุณาป้อนเลข 2 หลักให้ถูกต้อง');
+                                return;
                             }
-                            if (closedNumbers2digit.includes(newNumber.trim()) && newNumber.trim() !== currentNumber) {
-                                await customAlert(`เลข ${newNumber.trim()} ถูกปิดไว้แล้ว`); return;
+                            if (currentClosedNumbers2digit.includes(newNumber.trim()) && newNumber.trim() !== currentNumber) {
+                                await customAlert(`เลข ${newNumber.trim()} ถูกปิดไว้แล้ว`);
+                                return;
                             }
-                            closedNumbers2digit[index] = newNumber.trim();
-                            closedNumbers2digit.sort();
-                            await updateCloseNumbersTable2digit();
+                            currentClosedNumbers2digit[index] = newNumber.trim();
+                            currentClosedNumbers2digit.sort();
+                            await saveClosedNumbers2digitData(); // Save to Firestore
                             await customAlert(`แก้ไขเลขปิดเป็น ${newNumber.trim()} เรียบร้อยแล้ว`);
                         }
                     } else if (target.classList.contains('delete-close-number-btn')) {
-                        const numberToDelete = closedNumbers2digit[index];
-                        const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบเลขปิด ${numberToDelete}?`);
+                        const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบเลขปิด ${currentClosedNumbers2digit[index]}?`);
                         if (confirmed) {
-                            closedNumbers2digit.splice(index, 1);
-                            await updateCloseNumbersTable2digit();
-                            await customAlert(`ลบเลขปิด ${numberToDelete} เรียบร้อยแล้ว`);
+                            currentClosedNumbers2digit.splice(index, 1);
+                            await saveClosedNumbers2digitData(); // Save to Firestore
+                            await customAlert(`ลบเลขปิด ${currentClosedNumbers2digit[index]} เรียงร้อยแล้ว`);
                         }
                     }
                 });
@@ -2351,16 +2601,25 @@
             const headerRow = [];
             table.querySelectorAll('thead th').forEach(th => {
                 const text = th.textContent.trim();
-                if (text !== 'จัดการ') headerRow.push(text);
+                // Exclude 'จัดการ' column from export
+                if (text !== 'จัดการ') {
+                    headerRow.push(text);
+                }
             });
 
             const rows = [];
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const rowData = [];
                 tr.querySelectorAll('td').forEach((td, index) => {
+                    // Exclude the last column (จัดการ)
                     if (index < tr.querySelectorAll('td').length - 1) {
-                        let cellText = td.textContent.trim().replace(/,/g, '');
-                        if (cellText === '-') cellText = '0';
+                         // Clean up price strings (remove commas, excess text)
+                        let cellText = td.textContent.trim();
+                        if (cellText.includes('บาท')) {
+                            cellText = cellText.replace('บาท', '').trim();
+                        }
+                        cellText = cellText.replace(/,/g, ''); // Remove commas
+                        if (cellText === '-') cellText = '0'; // Convert '-' to '0' for numerical columns
                         rowData.push(cellText);
                     }
                 });
@@ -2369,13 +2628,20 @@
 
             const footerRow = [];
             table.querySelectorAll('tfoot td').forEach(td => {
-                 let cellText = td.textContent.trim().replace(/,/g, '').replace('ยอดรวม:', '').trim();
-                 footerRow.push(cellText);
+                const text = td.textContent.trim();
+                 // Clean up price strings for footer (remove commas, 'ยอดรวม:')
+                let cellText = text;
+                if (cellText.startsWith('ยอดรวม:')) {
+                    cellText = cellText.replace('ยอดรวม:', '').trim();
+                }
+                cellText = cellText.replace(/,/g, ''); // Remove commas
+                footerRow.push(cellText);
             });
 
             const ws_data = [headerRow, ...rows, footerRow];
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
 
+            // Set column widths
             const colWidths = ws_data[0].map((_, colIndex) => ({
                 wch: Math.max(...ws_data.map(row => (row[colIndex] ? String(row[colIndex]).length : 0))) + 2
             }));
@@ -2392,10 +2658,12 @@
             const table = document.getElementById(tableId);
 
             if (!table) {
-                customAlert(`ไม่พบตารางสำหรับ ${tableName}`); return;
+                customAlert(`ไม่พบตารางสำหรับ ${tableName}`);
+                return;
             }
 
-            const headerRow = ['ตัวเลข', 'ราคาเกิน'];
+            const headerRow = ['ตัวเลข', 'ราคาเกิน']; // Only these columns
+
             const rows = [];
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const num = tr.cells[0].textContent.trim();
@@ -2404,7 +2672,7 @@
                 if (type === '3digit') {
                     const limitStraightText = tr.cells[3].textContent.trim();
                     const limitBoxedText = tr.cells[4].textContent.trim();
-                    excessPrice += (limitStraightText === '-') ? 0 : parseFloat(limitStraightText.replace(/,/g, ''));
+                    excessPrice = (limitStraightText === '-') ? 0 : parseFloat(limitStraightText.replace(/,/g, ''));
                     excessPrice += (limitBoxedText === '-') ? 0 : parseFloat(limitBoxedText.replace(/,/g, ''));
                 } else {
                     const limitStraightText = tr.cells[2].textContent.trim();
@@ -2417,7 +2685,8 @@
             });
 
             if (rows.length === 0) {
-                customAlert(`ไม่มีเลขเกินสำหรับ ${tableName} ที่จะ Export`); return;
+                customAlert(`ไม่มีเลขเกินสำหรับ ${tableName} ที่จะ Export ได้`);
+                return;
             }
 
             const ws_data = [headerRow, ...rows];
@@ -2444,9 +2713,40 @@
                 const table = document.getElementById(tableId);
 
                 if (table) {
-                    const headerRow = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim()).slice(0, -1);
-                    const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr => Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim()).slice(0, -1));
-                    const footerRow = Array.from(table.querySelectorAll('tfoot td')).map(td => td.textContent.trim());
+                    const headerRow = [];
+                    table.querySelectorAll('thead th').forEach(th => {
+                        const text = th.textContent.trim();
+                        if (text !== 'จัดการ') {
+                            headerRow.push(text);
+                        }
+                    });
+
+                    const rows = [];
+                    table.querySelectorAll('tbody tr').forEach(tr => {
+                        const rowData = [];
+                        tr.querySelectorAll('td').forEach((td, index) => {
+                            if (index < tr.querySelectorAll('td').length - 1) {
+                                let cellText = td.textContent.trim();
+                                if (cellText.includes('บาท')) {
+                                    cellText = cellText.replace('บาท', '').trim();
+                                }
+                                cellText = cellText.replace(/,/g, '');
+                                if (cellText === '-') cellText = '0';
+                                rowData.push(cellText);
+                            }
+                        });
+                        rows.push(rowData);
+                    });
+
+                    const footerRow = [];
+                    table.querySelectorAll('tfoot td').forEach(td => {
+                        let cellText = td.textContent.trim();
+                        if (cellText.startsWith('ยอดรวม:')) {
+                            cellText = cellText.replace('ยอดรวม:', '').trim();
+                        }
+                        cellText = cellText.replace(/,/g, '');
+                        footerRow.push(cellText);
+                    });
 
                     const ws_data = [headerRow, ...rows, footerRow];
                     const ws = XLSX.utils.aoa_to_sheet(ws_data);
@@ -2455,6 +2755,7 @@
                         wch: Math.max(...ws_data.map(row => (row[colIndex] ? String(row[colIndex]).length : 0))) + 2
                     }));
                     ws['!cols'] = colWidths;
+
 
                     XLSX.utils.book_append_sheet(wb, ws, tableName);
                 }
@@ -2484,8 +2785,8 @@
                         return;
                     }
                     closedNumbers.push(number);
-                    closedNumbers.sort();
-                    await updateCloseNumbersTable();
+                    closedNumbers.sort(); // Keep sorted
+                    await saveClosedNumbersData(); // Save to Firestore
                     closeNumberInput.value = '';
                     displayConfirmationMessage('CloseNumbers', `เพิ่มเลขปิด ${number} เรียบร้อยแล้ว`);
                 });
@@ -2496,7 +2797,7 @@
                     const confirmed = await customConfirm('คุณแน่ใจหรือไม่ที่ต้องการลบเลขปิด 3 ตัวทั้งหมด?', 'ยืนยันการลบ');
                     if (confirmed) {
                         closedNumbers = [];
-                        await updateCloseNumbersTable();
+                        await saveClosedNumbersData(); // Save to Firestore
                         await customAlert('ลบเลขปิด 3 ตัวทั้งหมดเรียบร้อยแล้ว');
                     }
                 });
@@ -2518,8 +2819,8 @@
                         return;
                     }
                     closedNumbers2digit.push(number);
-                    closedNumbers2digit.sort();
-                    await updateCloseNumbersTable2digit();
+                    closedNumbers2digit.sort(); // Keep sorted
+                    await saveClosedNumbers2digitData(); // Save to Firestore
                     closeNumberInput2digit.value = '';
                     displayConfirmationMessage('CloseNumbers2digit', `เพิ่มเลขปิด ${number} (2 หลัก) เรียบร้อยแล้ว`);
                 });
@@ -2530,7 +2831,7 @@
                     const confirmed = await customConfirm('คุณแน่ใจหรือไม่ที่ต้องการลบเลขปิด 2 หลักทั้งหมด?', 'ยืนยันการลบ');
                     if (confirmed) {
                         closedNumbers2digit = [];
-                        await updateCloseNumbersTable2digit();
+                        await saveClosedNumbers2digitData(); // Save to Firestore
                         await customAlert('ลบเลขปิด 2 หลักทั้งหมดเรียบร้อยแล้ว');
                     }
                 });
@@ -2578,10 +2879,13 @@
                                     let excessPrice = 0;
 
                                     if (type === '3digit') {
-                                        excessPrice += parseFloat(tr.cells[3].textContent.trim().replace(/,/g, '') || 0);
-                                        excessPrice += parseFloat(tr.cells[4].textContent.trim().replace(/,/g, '') || 0);
+                                        const limitStraightText = tr.cells[3].textContent.trim();
+                                        const limitBoxedText = tr.cells[4].textContent.trim();
+                                        excessPrice = (limitStraightText === '-') ? 0 : parseFloat(limitStraightText.replace(/,/g, ''));
+                                        excessPrice += (limitBoxedText === '-') ? 0 : parseFloat(limitBoxedText.replace(/,/g, ''));
                                     } else {
-                                        excessPrice = parseFloat(tr.cells[2].textContent.trim().replace(/,/g, '') || 0);
+                                        const limitStraightText = tr.cells[2].textContent.trim();
+                                        excessPrice = (limitStraightText === '-') ? 0 : parseFloat(limitStraightText.replace(/,/g, ''));
                                     }
 
                                     if (excessPrice > 0) {
@@ -2614,14 +2918,15 @@
 
             if (dropdownClearAllBtn) {
                 dropdownClearAllBtn.addEventListener('click', async () => {
-                    const confirmed = await customConfirm('คุณแน่ใจหรือไม่ที่ต้องการลบข้อมูลทั้งหมดในบัญชีนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้!', 'ยืนยันการลบข้อมูล');
+                    const confirmed = await customConfirm('คุณแน่ใจหรือไม่ที่ต้องการลบข้อมูลทั้งหมด? การดำเนินการนี้ไม่สามารถย้อนกลับได้!', 'ยืนยันการลบข้อมูล');
                     if (confirmed) {
-                        clearAllDataInMemory();
-                        if(currentUserId) {
-                             await db.collection('users').doc(currentUserId).delete();
+                        try {
+                            await clearAllDataInFirestore(); // Clear data from Firestore
+                            await customAlert('ลบข้อมูลทั้งหมดเรียบร้อยแล้ว');
+                        } catch (error) {
+                            console.error("Failed to clear all data:", error);
+                            await customAlert('เกิดข้อผิดพลาดในการลบข้อมูลทั้งหมด');
                         }
-                        await initializeData();
-                        await customAlert('ลบข้อมูลทั้งหมดเรียบร้อยแล้ว');
                     }
                 });
             }
@@ -2639,16 +2944,18 @@
             if (exportPagePack5) exportPagePack5.addEventListener('click', () => exportTableToExcel('Pack5'));
             if (exportAllTablesBtn) exportAllTablesBtn.addEventListener('click', exportAllTablesToExcel);
 
+            // Customer total comparison
             if (compareTotalsBtn) {
                 compareTotalsBtn.addEventListener('click', () => {
                     const enteredTotal = parseFloat(customerTotalInput ? customerTotalInput.value : 0);
                     if (isNaN(enteredTotal)) {
-                        customAlert('กรุณาป้อนยอดรวมที่ลูกค้าแจ้งเป็นตัวเลข'); return;
+                        customAlert('กรุณาป้อนยอดรวมที่ลูกค้าแจ้งเป็นตัวเลข');
+                        return;
                     }
 
                     if (comparisonResultDisplay) {
                         comparisonResultDisplay.classList.remove('hidden');
-                        if (Math.abs(enteredTotal - currentGrandTotal) < 0.01) {
+                        if (Math.abs(enteredTotal - currentGrandTotal) < 0.01) { // Allow for float precision issues
                             comparisonResultDisplay.className = 'mt-6 comparison-match';
                             comparisonResultDisplay.textContent = `ยอดตรงกัน! (${formatPrice(currentGrandTotal)} บาท)`;
                         } else {
@@ -2659,14 +2966,19 @@
                 });
             }
 
+            // Large amount confirmation setting
             if (setLargeAmountConfirmThresholdBtn) {
                 setLargeAmountConfirmThresholdBtn.addEventListener('click', async () => {
-                    const threshold = parseFloat(largeAmountConfirmThresholdInput ? largeAmountConfirmThresholdInput.value : '');
+                    const inputVal = largeAmountConfirmThresholdInput ? largeAmountConfirmThresholdInput.value : '';
+                    const threshold = parseFloat(inputVal);
+
                     if (isNaN(threshold) || threshold < 0) {
-                        await customAlert('กรุณาป้อนยอดเงินที่ต้องยืนยันเป็นตัวเลขที่ถูกต้องและไม่ติดลบ'); return;
+                        await customAlert('กรุณาป้อนยอดเงินที่ต้องยืนยันเป็นตัวเลขที่ถูกต้องและไม่ติดลบ');
+                        return;
                     }
+
                     limitThresholds['global_large_amount_confirm'] = threshold;
-                    await saveUserDataObject('limitThresholds', limitThresholds);
+                    await saveLimitThresholdsData(); // Save to Firestore
                     updateLargeAmountConfirmThresholdDisplay();
                     await customAlert(`ตั้งค่ายอดเงินที่ต้องยืนยันเป็น ${formatPrice(threshold)} บาท เรียบร้อยแล้ว`);
                 });
@@ -2679,9 +2991,11 @@
                     }
                 });
             }
-             updateLargeAmountConfirmThresholdDisplay();
+
+             updateLargeAmountConfirmThresholdDisplay(); // Initial display
         }
 
+        // New function to display current large amount confirmation threshold
         function updateLargeAmountConfirmThresholdDisplay() {
             if (largeAmountConfirmThresholdDisplay) {
                 const threshold = Number(limitThresholds['global_large_amount_confirm']) || 0;
@@ -2702,21 +3016,31 @@
             btnBuyBoxed.classList.add('hidden');
             btnBuyReversed.classList.add('hidden');
 
-            const numberLength = getNumberLengthByType(currentType);
-            buyNumberInput.maxLength = numberLength;
-            buyNumberInput.placeholder = 'X'.repeat(numberLength || 1);
-
             if (currentType === '3digit') {
                 btnBuyBoxed.classList.remove('hidden');
                 btnBuyReversed.classList.remove('hidden');
+                buyNumberInput.maxLength = 3;
+                buyNumberInput.placeholder = 'XXX';
             } else if (currentType === '2digitTop' || currentType === '2digitBottom' || currentType === 'Run2Top') {
                 btnBuyReversed.classList.remove('hidden');
+                buyNumberInput.maxLength = 2;
+                buyNumberInput.placeholder = 'XX';
+            } else if (currentType === 'RunTop' || currentType === 'RunBottom') {
+                buyNumberInput.maxLength = 1;
+                buyNumberInput.placeholder = 'X';
+            } else if (currentType === 'Pack4') {
+                buyNumberInput.maxLength = 4;
+                buyNumberInput.placeholder = 'XXXX';
+            } else if (currentType === 'Pack5') {
+                buyNumberInput.maxLength = 5;
+                buyNumberInput.placeholder = 'XXXXX';
             }
         }
 
         function updateCurrentCustomerSummaryDisplay() {
             if (!currentCustomerSummaryDiv || !currentCustomerNameDisplay || !currentCustomerEntriesList || !currentCustomerTotalAmount) return;
 
+            // Update the customer name display immediately
             currentCustomerNameDisplay.textContent = currentCustomerName || 'ลูกค้าไม่ระบุชื่อ';
 
             if (currentCustomerPendingEntries.length > 0) {
@@ -2725,7 +3049,12 @@
                 let total = 0;
                 currentCustomerPendingEntries.forEach(entry => {
                     const li = document.createElement('li');
-                    let buyTypeSuffix = entry.buyType === 'straight' ? ' (<strong>ตัวตรง</strong>)' : entry.buyType === 'boxed' ? ' (<strong>โต๊ด</strong>)' : ' (<strong>กลับ</strong>)';
+                    let buyTypeSuffix = '';
+                    if (entry.buyType === 'straight') buyTypeSuffix = ' (<strong>ตัวตรง</strong>)'; // Added for straight
+                    else if (entry.buyType === 'boxed') buyTypeSuffix = ' (<strong>โต๊ด</strong>)';
+                    else if (entry.buyType === 'reversed') buyTypeSuffix = ' (<strong>กลับ</strong>)';
+
+                    // Updated formatting for entries
                     li.innerHTML = `<span class="font-bold text-lg">[${getLottoTypeDisplayName(entry.type)}]</span> <span class="text-lg">${entry.number} / ${formatPrice(entry.price)}</span>${buyTypeSuffix}`;
                     currentCustomerEntriesList.appendChild(li);
                     total += entry.price;
@@ -2742,17 +3071,21 @@
         async function updateAllCustomersSummaryDisplay() {
             if (!allCustomersSummaryContainer) return;
 
+            const latestAllCustomerBuyData = await loadAllCustomerBuyDataData(); // Ensure latest data is used
             allCustomersSummaryContainer.innerHTML = '';
-            const customerNames = Object.keys(allCustomerBuyData).sort();
+            const customerNames = Object.keys(latestAllCustomerBuyData).sort();
 
             customerNames.forEach(name => {
-                const customerData = allCustomerBuyData[name];
+                const customerData = latestAllCustomerBuyData[name];
                 const card = document.createElement('div');
                 card.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-200 relative';
 
                 let entriesHtml = customerData.entries.map(entry => {
-                    let buyTypeSuffix = entry.buyType === 'straight' ? ' (<strong>ตัวตรง</strong>)' : entry.buyType === 'boxed' ? ' (<strong>โต๊ด</strong>)' : ' (<strong>กลับ</strong>)';
-                    return `<li><span class="font-bold">[${getLottoTypeDisplayName(entry.type)}]</span> ${entry.number} / ${formatPrice(entry.price)}${buyTypeSuffix}</li>`;
+                    let buyTypeSuffix = '';
+                    if (entry.buyType === 'straight') buyTypeSuffix = ' (<strong>ตัวตรง</strong>)'; // Added for straight
+                    else if (entry.buyType === 'boxed') buyTypeSuffix = ' (<strong>โต๊ด</strong>)';
+                    else if (entry.buyType === 'reversed') buyTypeSuffix = ' (<strong>กลับ</strong>)';
+                    return `<li><span class="font-bold text-lg">[${getLottoTypeDisplayName(entry.type)}]</span> <span class="text-lg">${entry.number} / ${formatPrice(entry.price)}</span>${buyTypeSuffix}</li>`;
                 }).join('');
 
                 let comparisonHtml = '';
@@ -2766,25 +3099,36 @@
 
                 card.innerHTML = `
                     <h3 class="text-xl font-bold text-gray-800 mb-2">${name || 'ลูกค้าไม่ระบุชื่อ'}</h3>
-                    <ul class="text-sm text-gray-600 mb-3 max-h-24 overflow-y-auto border-b pb-2">${entriesHtml}</ul>
-                    <div class="flex justify-between items-center text-md font-semibold text-gray-700"><span>ยอดรวม:</span><span>${formatPrice(customerData.total)} บาท</span></div>
-                    <div class="flex justify-between items-center text-sm text-gray-500 mt-1"><span>ยอดลูกค้าแจ้ง:</span><span>${customerData.customerCheckTotal ? formatPrice(customerData.customerCheckTotal) + ' บาท' : 'ไม่ได้ระบุ'}</span></div>
-                    <div class="mt-3 text-center text-sm font-semibold">${comparisonHtml}</div>
+                    <ul class="text-sm text-gray-600 mb-3 max-h-24 overflow-y-auto border-b pb-2">
+                        ${entriesHtml}
+                    </ul>
+                    <div class="flex justify-between items-center text-md font-semibold text-gray-700">
+                        <span>ยอดรวม:</span>
+                        <span>${formatPrice(customerData.total)} บาท</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm text-gray-500 mt-1">
+                        <span>ยอดลูกค้าแจ้ง:</span>
+                        <span>${customerData.customerCheckTotal ? formatPrice(customerData.customerCheckTotal) + ' บาท' : 'ไม่ได้ระบุ'}</span>
+                    </div>
+                    <div class="mt-3 text-center text-sm font-semibold">
+                        ${comparisonHtml}
+                    </div>
                     <div class="absolute top-3 right-3 flex gap-2">
                         <button class="text-blue-500 hover:text-blue-700 text-sm edit-customer-summary-btn" data-customer-name="${name}">แก้ไข</button>
                         <button class="text-red-500 hover:text-red-700 text-sm delete-customer-summary-btn" data-customer-name="${name}">ลบ</button>
-                    </div>`;
+                    </div>
+                `;
                 allCustomersSummaryContainer.appendChild(card);
             });
 
+            // Add event listeners for edit/delete buttons on summary cards
             allCustomersSummaryContainer.querySelectorAll('.delete-customer-summary-btn').forEach(button => {
                 button.addEventListener('click', async (e) => {
                     const nameToDelete = e.target.dataset.customerName;
                     const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบสรุปยอดของ "${nameToDelete || 'ลูกค้าไม่ระบุชื่อ'}"? (ข้อมูลเลขที่คีย์ไปแล้วจะไม่ถูกลบ)`, 'ยืนยันการลบ');
                     if (confirmed) {
                         delete allCustomerBuyData[nameToDelete];
-                        await saveUserDataObject('allCustomerBuyData', allCustomerBuyData);
-                        await updateAllCustomersSummaryDisplay();
+                        await saveAllCustomerBuyDataData(); // Save to Firestore
                         await customAlert(`ลบสรุปยอดของ "${nameToDelete || 'ลูกค้าไม่ระบุชื่อ'}" เรียบร้อยแล้ว`);
                     }
                 });
@@ -2794,14 +3138,19 @@
                 button.addEventListener('click', async (e) => {
                     const nameToEdit = e.target.dataset.customerName;
                     const customerData = allCustomerBuyData[nameToEdit];
+
                     if (customerData) {
+                        // Load data into pending entries and customer input fields
                         currentCustomerName = nameToEdit;
-                        currentCustomerPendingEntries = [...customerData.entries];
+                        currentCustomerPendingEntries = [...customerData.entries]; // Create a copy
                         if (customerNameInput) customerNameInput.value = nameToEdit;
-                        if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = customerData.customerCheckTotal || '';
+                        if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = customerData.customerCheckTotal !== null ? customerData.customerCheckTotal : '';
+
                         updateCurrentCustomerSummaryDisplay();
-                        await setActiveMenu('menuBuyNumbers');
+                        setActiveMenu('menuBuyNumbers'); // Switch to the buy numbers page
                         await customAlert(`โหลดรายการของ "${nameToEdit}" เพื่อแก้ไขแล้ว`);
+                    } else {
+                        await customAlert('ไม่พบข้อมูลลูกค้าที่ต้องการแก้ไข');
                     }
                 });
             });
@@ -2809,44 +3158,79 @@
 
 
         function setupBuyNumbersPageListeners() {
+            // Update currentCustomerName in real-time when customerNameInput changes
             if (customerNameInput) {
                 customerNameInput.addEventListener('input', () => {
                     currentCustomerName = customerNameInput.value.trim();
-                    updateCurrentCustomerSummaryDisplay();
+                    updateCurrentCustomerSummaryDisplay(); // Update display immediately
                 });
             }
 
+
             if (buyPageTypeSelector) {
                 buyPageTypeSelector.addEventListener('click', (e) => {
-                    const target = e.target.closest('.buy-type-btn');
-                    if (target) {
+                    const target = e.target;
+                    if (target.classList.contains('buy-type-btn')) {
+                        buyPageTypeSelector.querySelectorAll('.buy-type-btn').forEach(btn => {
+                            btn.classList.remove('active', 'bg-blue-500', 'hover:bg-blue-600', 'text-white');
+                            btn.classList.add('bg-gray-300', 'hover:bg-gray-400', 'text-gray-800');
+                        });
+                        target.classList.add('active', 'bg-blue-500', 'hover:bg-blue-600', 'text-white');
+                        target.classList.remove('bg-gray-300', 'hover:bg-gray-400', 'text-gray-800');
                         currentBuyPageLottoType = target.dataset.type;
-                        setActiveMenu('menuBuyNumbers'); // Re-run to update UI correctly
+                        updateBuyPageActionButtons();
                         if (buyNumberInput) {
                             buyNumberInput.value = '';
                             highlightError(buyNumberInput, false);
-                            buyNumberInput.focus();
                         }
-                        if (buyPriceInput) buyPriceInput.value = '';
+                        if (buyPriceInput) {
+                            buyPriceInput.value = '';
+                            highlightError(buyPriceInput, false);
+                        }
+                        if (buyNumberInput) buyNumberInput.focus();
                     }
                 });
             }
 
             const addEntryToPendingList = async (num, p, buyType, type) => {
                 const confirmThreshold = Number(limitThresholds['global_large_amount_confirm']) || 0;
+
+                // Initial confirmation for large single amount
                 if (confirmThreshold > 0 && p >= confirmThreshold) {
                     const confirmed = await customConfirm(`คุณกำลังจะเพิ่มเลข ${num} (${getLottoTypeDisplayName(type)}) ด้วยราคา ${formatPrice(p)} บาท ใช่หรือไม่?`, 'ยืนยันยอดสูง');
-                    if (!confirmed) return false;
+                    if (!confirmed) {
+                        console.log("Large amount entry cancelled by user.");
+                        return false; // Stop the operation
+                    }
                 }
 
-                if (type === '3digit' && isNumberClosed(num)) { await customAlert(`เลข ${num} เป็นเลขปิด ไม่สามารถซื้อได้`); return false; }
-                if ((type === '2digitTop' || type === '2digitBottom') && isNumberClosed2digit(num)) { await customAlert(`เลข ${num} เป็นเลขปิด (2 หลัก) ไม่สามารถซื้อได้`); return false; }
+                // Check for closed numbers
+                if (type === '3digit' && isNumberClosed(num)) {
+                    await customAlert(`เลข ${num} เป็นเลขปิด ไม่สามารถซื้อได้`);
+                    return false;
+                }
+                if ((type === '2digitTop' || type === '2digitBottom') && isNumberClosed2digit(num)) {
+                    await customAlert(`เลข ${num} เป็นเลขปิด (2 หลัก) ไม่สามารถซื้อได้`);
+                    return false;
+                }
 
-                currentCustomerPendingEntries.push({ type, number: num, price: p, buyType });
+                currentCustomerPendingEntries.push({
+                    type: type,
+                    number: num,
+                    price: p,
+                    buyType: buyType // 'straight', 'boxed', 'reversed'
+                });
                 updateCurrentCustomerSummaryDisplay();
                 displayConfirmationMessage('BuyNumbers', `เพิ่ม ${num} (${getLottoTypeDisplayName(type)}) ราคา ${formatPrice(p)} บาท เรียบร้อยแล้ว`);
-                if (buyNumberInput) { buyNumberInput.value = ''; highlightError(buyNumberInput, false); buyNumberInput.focus(); }
-                if (buyPriceInput) { buyPriceInput.value = ''; highlightError(buyPriceInput, false); }
+                if (buyNumberInput) {
+                    buyNumberInput.value = '';
+                    highlightError(buyNumberInput, false);
+                }
+                if (buyPriceInput) {
+                    buyPriceInput.value = '';
+                    highlightError(buyPriceInput, false);
+                }
+                if (buyNumberInput) buyNumberInput.focus();
                 return true;
             };
 
@@ -2871,7 +3255,8 @@
             if (btnBuyStraight) {
                 btnBuyStraight.addEventListener('click', async () => {
                     const validationResult = validateBuyInput();
-                    if (validationResult) await addEntryToPendingList(validationResult.number, validationResult.price, 'straight', currentBuyPageLottoType);
+                    if (!validationResult) return;
+                    await addEntryToPendingList(validationResult.number, validationResult.price, 'straight', currentBuyPageLottoType);
                 });
             }
 
@@ -2880,10 +3265,28 @@
                     const validationResult = validateBuyInput();
                     if (!validationResult) return;
                     const { number: n, price: p } = validationResult;
+
                     const result = await showBoxedModal(n, p);
-                    if (result) {
-                        if (result.addStraight) await addEntryToPendingList(n, result.straightPrice, 'straight', currentBuyPageLottoType);
-                        if (result.addBoxed) await addEntryToPendingList(n, result.boxedPrice, 'boxed', currentBuyPageLottoType);
+                    if (result !== null) {
+                        let totalBoxedPrice = 0;
+                        let addedAny = false;
+                        if (result.addStraight) {
+                            const added = await addEntryToPendingList(n, result.straightPrice, 'straight', currentBuyPageLottoType);
+                            if (added) {
+                                totalBoxedPrice += result.straightPrice;
+                                addedAny = true;
+                            }
+                        }
+                        if (result.addBoxed) {
+                            const added = await addEntryToPendingList(n, result.boxedPrice, 'boxed', currentBuyPageLottoType);
+                            if (added) {
+                                totalBoxedPrice += result.boxedPrice;
+                                addedAny = true;
+                            }
+                        }
+                        if (addedAny) {
+                             displayConfirmationMessage('BuyNumbers', `เพิ่มเลข ${n} (ตัวโต๊ด) ยอดรวม ${formatPrice(totalBoxedPrice)} บาท เรียบร้อยแล้ว`);
+                        }
                     }
                 });
             }
@@ -2894,10 +3297,21 @@
                     if (!validationResult) return;
                     const { number: n, price: p } = validationResult;
                     const perms = getPermutations(n);
+
                     const results = await showPriceModal(currentBuyPageLottoType, 'reversed', 'ราคาตัวกลับ', `เลือกเลขและแก้ไขราคา:`, p, true, perms);
-                    if (results) {
+
+                    if (results !== null && Array.isArray(results)) {
+                        let totalBatchPrice = 0;
+                        let addedAny = false;
                         for (const item of results) {
-                            await addEntryToPendingList(item.number, item.price, 'reversed', currentBuyPageLottoType);
+                            const added = await addEntryToPendingList(item.number, item.price, 'reversed', currentBuyPageLottoType);
+                            if (added) {
+                                totalBatchPrice += item.price;
+                                addedAny = true;
+                            }
+                        }
+                        if (addedAny) {
+                            displayConfirmationMessage('BuyNumbers', `เพิ่มเลขกลับ ${results.length} รายการ ยอดรวม ${formatPrice(totalBatchPrice)} บาท เรียบร้อยแล้ว`);
                         }
                     }
                 });
@@ -2907,39 +3321,51 @@
             if (btnCloseCustomer) {
                 btnCloseCustomer.addEventListener('click', async () => {
                     if (currentCustomerPendingEntries.length === 0) {
-                        await customAlert('ไม่มีรายการสำหรับลูกค้าคนนี้ที่จะปิดยอด'); return;
+                        await customAlert('ไม่มีรายการสำหรับลูกค้าคนนี้ที่จะปิดยอด');
+                        return;
                     }
 
-                    let totalCurrentCustomerPurchase = currentCustomerPendingEntries.reduce((sum, entry) => sum + entry.price, 0);
-                    const customerCheckTotal = parseFloat(buyCustomerCheckTotalInput ? buyCustomerCheckTotalInput.value : null);
+                    let totalCurrentCustomerPurchase = 0;
+                    currentCustomerPendingEntries.forEach(entry => {
+                        totalCurrentCustomerPurchase += entry.price;
+                    });
+
+                    const customerCheckTotal = parseFloat(buyCustomerCheckTotalInput ? buyCustomerCheckTotalInput.value : 0);
+                    // Use currentCustomerName which is updated in real-time
                     const customerName = currentCustomerName || `ลูกค้า ${Object.keys(allCustomerBuyData).length + 1}`;
 
                     const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่จะปิดยอดสำหรับ "${customerName}"? ยอดรวม: ${formatPrice(totalCurrentCustomerPurchase)} บาท`);
                     if (!confirmed) return;
 
+                    // Process each pending entry and add to respective lottoData
                     for (const entry of currentCustomerPendingEntries) {
-                        let lottoDataObject;
-                        if (entry.type === '3digit') lottoDataObject = lottoData3digit; else if (entry.type === '2digitTop') lottoDataObject = lottoData2digitTop; else if (entry.type === '2digitBottom') lottoDataObject = lottoData2digitBottom; else if (entry.type === 'RunTop') lottoDataObject = lottoDataRunTop; else if (entry.type === 'RunBottom') lottoDataObject = lottoDataRunBottom; else if (entry.type === 'Run2Top') lottoDataObject = lottoDataRun2Top; else if (entry.type === 'Pack4') lottoDataObject = lottoDataPack4; else if (entry.type === 'Pack5') lottoDataObject = lottoDataPack5;
-
-                        if (!lottoDataObject[entry.number]) lottoDataObject[entry.number] = { straight: 0, boxed: 0 };
-                        if (entry.buyType === 'boxed' && entry.type === '3digit') {
-                             lottoDataObject[entry.number].boxed += entry.price;
-                        } else {
-                             lottoDataObject[entry.number].straight += entry.price;
+                        let lottoDataObject = await loadData(entry.type); // Load latest data before modification
+                        if (!lottoDataObject[entry.number]) {
+                            lottoDataObject[entry.number] = { straight: 0, boxed: 0 };
                         }
-                        await saveData(entry.type, lottoDataObject);
-                    }
-                    
-                    allCustomerBuyData[customerName] = { entries: [...currentCustomerPendingEntries], total: totalCurrentCustomerPurchase, customerCheckTotal: isNaN(customerCheckTotal) ? null : customerCheckTotal };
-                    await saveUserDataObject('allCustomerBuyData', allCustomerBuyData);
 
+                        if (entry.buyType === 'straight' || entry.buyType === 'reversed') {
+                            lottoDataObject[entry.number].straight += entry.price;
+                        } else if (entry.buyType === 'boxed' && entry.type === '3digit') {
+                            lottoDataObject[entry.number].boxed += entry.price;
+                        }
+                        await saveData(entry.type, lottoDataObject); // Save updated data for each type to Firestore
+                    }
+
+                    // Store customer summary
+                    allCustomerBuyData[customerName] = {
+                        entries: [...currentCustomerPendingEntries], // Store a copy
+                        total: totalCurrentCustomerPurchase,
+                        customerCheckTotal: isNaN(customerCheckTotal) ? null : customerCheckTotal
+                    };
+                    await saveAllCustomerBuyDataData(); // Save to Firestore
+
+                    // Clear current customer data for the next one
                     currentCustomerPendingEntries = [];
                     if (customerNameInput) customerNameInput.value = '';
-                    currentCustomerName = '';
+                    currentCustomerName = ''; // Clear the name variable too
                     if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = '';
                     updateCurrentCustomerSummaryDisplay();
-                    await updateAllCustomersSummaryDisplay();
-                    updateGrandTotalSummary();
                     await customAlert(`ปิดยอดสำหรับ "${customerName}" เรียบร้อยแล้ว!`);
                 });
             }
@@ -2952,19 +3378,34 @@
                     }
                     currentCustomerPendingEntries = [];
                     if (customerNameInput) customerNameInput.value = '';
-                    currentCustomerName = '';
+                    currentCustomerName = ''; // Clear the name variable too
                     if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = '';
                     updateCurrentCustomerSummaryDisplay();
                     displayConfirmationMessage('BuyNumbers', 'เริ่มลูกค้าใหม่แล้ว');
                 });
             }
 
+            if (buyCustomerCheckTotalInput) {
+                buyCustomerCheckTotalInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        if (btnBuyCompareCustomerTotal) btnBuyCompareCustomerTotal.click();
+                    }
+                });
+            }
+
             if (btnBuyCompareCustomerTotal) {
                 btnBuyCompareCustomerTotal.addEventListener('click', () => {
                     const enteredTotal = parseFloat(buyCustomerCheckTotalInput ? buyCustomerCheckTotalInput.value : 0);
-                    let currentCalculatedTotal = currentCustomerPendingEntries.reduce((sum, entry) => sum + entry.price, 0);
+                    let currentCalculatedTotal = 0;
+                    currentCustomerPendingEntries.forEach(entry => {
+                        currentCalculatedTotal += entry.price;
+                    });
 
-                    if (isNaN(enteredTotal)) { customAlert('กรุณาป้อนยอดรวมที่ลูกค้าแจ้งเป็นตัวเลข'); return; }
+                    if (isNaN(enteredTotal)) {
+                        customAlert('กรุณาป้อนยอดรวมที่ลูกค้าแจ้งเป็นตัวเลข');
+                        return;
+                    }
 
                     if (buyComparisonResultDisplay) {
                         buyComparisonResultDisplay.classList.remove('hidden');
@@ -2973,72 +3414,66 @@
                             buyComparisonResultDisplay.textContent = `ยอดตรงกัน! (${formatPrice(currentCalculatedTotal)} บาท)`;
                         } else {
                             buyComparisonResultDisplay.className = 'mt-4 p-3 rounded-md text-center comparison-mismatch';
-                            buyComparisonResultDisplay.textContent = `ยอดไม่ตรงกัน! ระบบ: ${formatPrice(currentCalculatedTotal)} บาท, ลูกค้า: ${formatPrice(enteredTotal)} บาท (ส่วนต่าง: ${formatPrice(currentCalculatedTotal - enteredTotal)} บาท)`;
+                            buyComparisonResultDisplay.textContent = `ยอดไม่ตรงกัน! ระบบ: ${formatPrice(currentCalculatedTotal)} บาท, ลูกค้า: ${formatPrice(enteredTotal)} บาท (ส่วนต่าง: ${formatPrice(enteredTotal - currentCalculatedTotal)} บาท)`;
                         }
                     }
                 });
             }
 
+            // Quick Add Price Buttons Listener
             if (quickAddPriceButtonsContainer) {
                 quickAddPriceButtonsContainer.addEventListener('click', (e) => {
-                    const target = e.target.closest('.quick-add-price-btn');
-                    if (target) {
+                    const target = e.target;
+                    if (target.classList.contains('quick-add-price-btn')) {
                         const valueToAdd = parseFloat(target.dataset.value);
-                        let currentPrice = parseFloat(buyPriceInput.value) || 0;
+                        let currentPrice = parseFloat(buyPriceInput.value || '0'); // Ensure it's a number, default to 0
+                        if (isNaN(currentPrice)) { // Fallback if parseFloat returns NaN
+                            currentPrice = 0;
+                        }
                         buyPriceInput.value = (currentPrice + valueToAdd).toFixed(2);
-                        highlightError(buyPriceInput, false);
+                        highlightError(buyPriceInput, false); // Clear error if any
                     }
                 });
             }
 
+
+            // Initial setup for buy page
+            updateBuyPageActionButtons();
+            updateCurrentCustomerSummaryDisplay();
+            updateAllCustomersSummaryDisplay();
+
             if (buyNumberInput) {
                 buyNumberInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') { e.preventDefault(); if (buyPriceInput) buyPriceInput.focus(); }
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        if (buyPriceInput) buyPriceInput.focus();
+                    }
                 });
             }
             if (buyPriceInput) {
                 buyPriceInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') { e.preventDefault(); if (btnBuyStraight) btnBuyStraight.click(); }
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        // Simulate click on appropriate button based on currentBuyPageLottoType
+                        if (currentBuyPageLottoType === '3digit') {
+                            if (btnBuyStraight) btnBuyStraight.click();
+                        } else if (currentBuyPageLottoType === '2digitTop' || currentBuyPageLottoType === '2digitBottom' || currentBuyPageLottoType === 'RunTop' || currentBuyPageLottoType === 'RunBottom' || currentBuyPageLottoType === 'Run2Top' || currentBuyPageLottoType === 'Pack4' || currentBuyPageLottoType === 'Pack5') {
+                            if (btnBuyStraight) btnBuyStraight.click();
+                        }
+                    }
                 });
             }
         }
-        
-        // --- Data and App Initialization ---
-        async function initializeData() {
-            // Load all data from Firestore
-            lottoData3digit = await loadData('lottoData3digit');
-            lottoData2digitTop = await loadData('lottoData2digitTop');
-            lottoData2digitBottom = await loadData('lottoData2digitBottom');
-            lottoDataRunTop = await loadData('lottoDataRunTop');
-            lottoDataRunBottom = await loadData('lottoDataRunBottom');
-            lottoDataRun2Top = await loadData('lottoDataRun2Top');
-            lottoDataPack4 = await loadData('lottoDataPack4');
-            lottoDataPack5 = await loadData('lottoDataPack5');
-            
-            limitThresholds = await loadUserDataObject('limitThresholds', {});
-            closedNumbers = await loadUserDataObject('closedNumbers', []);
-            closedNumbers2digit = await loadUserDataObject('closedNumbers2digit', []);
-            allCustomerBuyData = await loadUserDataObject('allCustomerBuyData', {});
 
-            // Update all UI components with the loaded data
-            const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
-            for (const type of allTypes) {
-                await updateTable(type);
-                updateLimitIndicator(type);
-            }
-            
-            updateGrandTotalSummary();
-            await updateCloseNumbersTable();
-            await updateCloseNumbersTable2digit();
-            updateLargeAmountConfirmThresholdDisplay();
-            await updateAllCustomersSummaryDisplay();
 
-            // Set the initial active page (navigation fix)
-            const initialMenuId = 'menuBuyNumbers';
-            await setActiveMenu(initialMenuId);
-        }
+        // --- Initialize All Components ---
+        // Function to set up all UI event listeners (called only once)
+        function setupAllUIListeners() {
+            if (areUILoadedAndListenersSetup) return; // Prevent duplicate setup
 
-        function assignDOMElements() {
+            console.log("Assigning DOM elements and setting up all UI Listeners...");
+
+            // Assign DOM elements
             pageContainer = document.getElementById('pageContainer');
             allPageContents = document.querySelectorAll('.page-content');
             menuItems = document.querySelectorAll('.menu-item');
@@ -3047,6 +3482,8 @@
             dropdownExportBtn = document.getElementById('dropdownExportBtn');
             dropdownExportLimitedBtn = document.getElementById('dropdownExportLimitedBtn');
             dropdownClearAllBtn = document.getElementById('dropdownClearAllBtn');
+
+            // 3 Digit
             page3digit = document.getElementById('page3digit');
             numberInput3digit = document.getElementById('numberInput3digit');
             priceInput3digit = document.getElementById('priceInput3digit');
@@ -3060,6 +3497,7 @@
             tableFooter3digit = document.getElementById('lottoTableFooter3digit');
             limitIndicator3digit = document.getElementById('limitIndicator3digit');
             confirmationMessage3digit = document.getElementById('confirmationMessage3digit');
+            // 2 Digit Top
             page2digitTop = document.getElementById('page2digitTop');
             numberInput2digitTop = document.getElementById('numberInput2digitTop');
             priceInput2digitTop = document.getElementById('priceInput2digitTop');
@@ -3072,6 +3510,7 @@
             tableFooter2digitTop = document.getElementById('lottoTableFooter2digitTop');
             limitIndicator2digitTop = document.getElementById('limitIndicator2digitTop');
             confirmationMessage2digitTop = document.getElementById('confirmationMessage2digitTop');
+            // 2 Digit Bottom
             page2digitBottom = document.getElementById('page2digitBottom');
             numberInput2digitBottom = document.getElementById('numberInput2digitBottom');
             priceInput2digitBottom = document.getElementById('priceInput2digitBottom');
@@ -3083,6 +3522,7 @@
             tableFooter2digitBottom = document.getElementById('lottoTableFooter2digitBottom');
             limitIndicator2digitBottom = document.getElementById('limitIndicator2digitBottom');
             confirmationMessage2digitBottom = document.getElementById('confirmationMessage2digitBottom');
+            // Run Top
             pageRunTop = document.getElementById('pageRunTop');
             numberInputRunTop = document.getElementById('numberInputRunTop');
             priceInputRunTop = document.getElementById('priceInputRunTop');
@@ -3093,6 +3533,7 @@
             tableFooterRunTop = document.getElementById('lottoTableFooterRunTop');
             limitIndicatorRunTop = document.getElementById('limitIndicatorRunTop');
             confirmationMessageRunTop = document.getElementById('confirmationMessageRunTop');
+            // Run Bottom
             pageRunBottom = document.getElementById('pageRunBottom');
             numberInputRunBottom = document.getElementById('numberInputRunBottom');
             priceInputRunBottom = document.getElementById('priceInputRunBottom');
@@ -3103,16 +3544,18 @@
             tableFooterRunBottom = document.getElementById('lottoTableFooterRunBottom');
             limitIndicatorRunBottom = document.getElementById('limitIndicatorRunBottom');
             confirmationMessageRunBottom = document.getElementById('confirmationMessageRunBottom');
+            // Run 2 Top
             pageRun2Top = document.getElementById('pageRun2Top');
             numberInputRun2Top = document.getElementById('numberInputRun2Top');
             priceInputRun2Top = document.getElementById('priceInputRun2Top');
             btnAddRun2Top = document.getElementById('btnAddRun2Top');
             btnLimitRun2Top = document.getElementById('btnLimitRun2Top');
-            btnExportRun2Top = document.getElementById('btnExportRun2Top');
+            btnExportRun2Top = document.getElementById('btnExport2Top');
             tableBodyRun2Top = document.getElementById('lottoTableBodyRun2Top');
-            tableFooterRun2Top = document.getElementById('lottoTableFooterRun2Top');
+            tableFooterRun2Top = document.getElementById('lottoTableFooter2Top');
             limitIndicatorRun2Top = document.getElementById('limitIndicatorRun2Top');
             confirmationMessageRun2Top = document.getElementById('confirmationMessageRun2Top');
+            // Pack 4
             pagePack4 = document.getElementById('pagePack4');
             numberInputPack4 = document.getElementById('numberInputPack4');
             priceInputPack4 = document.getElementById('priceInputPack4');
@@ -3120,9 +3563,10 @@
             btnLimitPack4 = document.getElementById('btnLimitPack4');
             btnExportPack4 = document.getElementById('btnExportPack4');
             tableBodyPack4 = document.getElementById('lottoTableBodyPack4');
-            tableFooterPack4 = document.getElementById('lottoTableFooterPack4');
+            tableFooterPack4 = document.getElementById('lottoTableFooter4');
             limitIndicatorPack4 = document.getElementById('limitIndicatorPack4');
             confirmationMessagePack4 = document.getElementById('confirmationMessagePack4');
+            // Pack 5
             pagePack5 = document.getElementById('pagePack5');
             numberInputPack5 = document.getElementById('numberInputPack5');
             priceInputPack5 = document.getElementById('priceInputPack5');
@@ -3130,9 +3574,10 @@
             btnLimitPack5 = document.getElementById('btnLimitPack5');
             btnExportPack5 = document.getElementById('btnExportPack5');
             tableBodyPack5 = document.getElementById('lottoTableBodyPack5');
-            tableFooterPack5 = document.getElementById('lottoTableFooterPack5');
+            tableFooterPack5 = document.getElementById('lottoTableFooter5');
             limitIndicatorPack5 = document.getElementById('limitIndicatorPack5');
             confirmationMessagePack5 = document.getElementById('confirmationMessagePack5');
+            // Export Page
             pageExport = document.getElementById('pageExport');
             exportPage3digit = document.getElementById('exportPage3digit');
             exportPage2digitTop = document.getElementById('exportPage2digitTop');
@@ -3143,6 +3588,7 @@
             exportPagePack4 = document.getElementById('exportPagePack4');
             exportPagePack5 = document.getElementById('exportPagePack5');
             exportAllTablesBtn = document.getElementById('exportAllTablesBtn');
+            // Modals
             priceModal = document.getElementById('priceModal');
             modalTitle = document.getElementById('modalTitle');
             modalPrompt = document.getElementById('modalPrompt');
@@ -3160,6 +3606,7 @@
             editBoxedContainer = document.getElementById('editBoxedContainer');
             editModalOkBtn = document.getElementById('editModalOkBtn');
             editModalCancelBtn = document.getElementById('editModalCancelBtn');
+            // Boxed Modal
             boxedModal = document.getElementById('boxedModal');
             boxedModalTitle = document.getElementById('boxedModalTitle');
             boxedModalStraightCheck = document.getElementById('boxedModalStraightCheck');
@@ -3168,29 +3615,37 @@
             boxedModalBoxedPriceInput = document.getElementById('boxedModalBoxedPriceInput');
             boxedModalOkBtn = document.getElementById('boxedModalOkBtn');
             boxedModalCancelBtn = document.getElementById('boxedModalCancelBtn');
+            // Grand Total Summary
             grandTotalSummarySection = document.getElementById('grandTotalSummarySection');
             userIdDisplay = document.getElementById('userIdDisplay');
+            // Close Numbers
             closeNumberInput = document.getElementById('closeNumberInput');
             btnAddCloseNumber = document.getElementById('btnAddCloseNumber');
             btnDeleteAllCloseNumbers = document.getElementById('btnDeleteAllCloseNumbers');
             closeNumbersTableBody = document.getElementById('closeNumbersTableBody');
             confirmationMessageCloseNumbers = document.getElementById('confirmationMessageCloseNumbers');
+            // Close Numbers 2 Digit
             closeNumberInput2digit = document.getElementById('closeNumberInput2digit');
             btnAddCloseNumber2digit = document.getElementById('btnAddCloseNumber2digit');
             btnDeleteAllCloseNumbers2digit = document.getElementById('btnDeleteAllCloseNumbers2digit');
             closeNumbersTableBody2digit = document.getElementById('closeNumbersTableBody2digit');
             confirmationMessageCloseNumbers2digit = document.getElementById('confirmationMessageCloseNumbers2digit');
+            // Generic Modal
             genericModal = document.getElementById('genericModal');
             genericModalTitle = document.getElementById('genericModalTitle');
             genericModalMessage = document.getElementById('genericModalMessage');
             genericModalOkBtn = document.getElementById('genericModalOkBtn');
             genericModalCancelBtn = document.getElementById('genericModalCancelBtn');
+            // Customer Total Comparison
             customerTotalInput = document.getElementById('customerTotalInput');
             compareTotalsBtn = document.getElementById('compareTotalsBtn');
             comparisonResultDisplay = document.getElementById('comparisonResultDisplay');
+            // Large Amount Confirmation Setting
             largeAmountConfirmThresholdInput = document.getElementById('largeAmountConfirmThresholdInput');
             setLargeAmountConfirmThresholdBtn = document.getElementById('setLargeAmountConfirmThresholdBtn');
             largeAmountConfirmThresholdDisplay = document.getElementById('largeAmountConfirmThresholdDisplay');
+
+            // NEW: Buy Numbers Page elements
             menuBuyNumbers = document.getElementById('menuBuyNumbers');
             pageBuyNumbers = document.getElementById('pageBuyNumbers');
             customerNameInput = document.getElementById('customerNameInput');
@@ -3212,54 +3667,88 @@
             btnBuyCompareCustomerTotal = document.getElementById('btnBuyCompareCustomerTotal');
             buyComparisonResultDisplay = document.getElementById('buyComparisonResultDisplay');
             allCustomersSummaryContainer = document.getElementById('allCustomersSummaryContainer');
-            quickAddPriceButtonsContainer = document.getElementById('quickAddPriceButtons');
-        }
+            quickAddPriceButtonsContainer = document.getElementById('quickAddPriceButtons'); // Assign the new container
 
-        async function initializeApp() {
-            console.log("Initializing Online App...");
-            
-            assignDOMElements();
 
-            // Setup static listeners that don't depend on data
+            // Setup event listeners for all parts
             setupGenericModalListeners();
             setupPriceModalListeners();
             setupBoxedModalListeners();
             setupEditModalListeners();
             setupDropdownMenuListeners();
-            setupExportPageListeners();
 
+            // Attach click listeners to menu items
             menuItems.forEach(item => {
-                item.addEventListener('click', (e) => setActiveMenu(e.currentTarget.id));
+                item.addEventListener('click', (e) => {
+                    const menuId = e.currentTarget.id;
+                    setActiveMenu(menuId);
+                });
             });
-            
+
+            // Set up listeners for each lotto type page
             const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
             allTypes.forEach(type => {
                 setupAddNumberListeners(type);
                 setupEditDeleteListeners(type);
             });
-            
+
             setupCloseNumbersListeners();
             setupCloseNumbers2digitListeners();
+            setupExportPageListeners();
             setupBuyNumbersPageListeners();
 
-            // Authenticate user and load their data
-            try {
-                const userCredential = await auth.signInAnonymously();
-                currentUserId = userCredential.user.uid;
-                console.log('User signed in anonymously with ID:', currentUserId);
-                if (userIdDisplay) userIdDisplay.textContent = `User ID: ${currentUserId.substring(0, 8)}...`;
-                
-                await initializeData();
-            } catch (error) {
-                console.error("Firebase authentication failed:", error);
-                await customAlert("ไม่สามารถเชื่อมต่อระบบออนไลน์ได้ โปรดรีเฟรชหน้าเว็บ", "ข้อผิดพลาด");
-                if (userIdDisplay) userIdDisplay.textContent = "User ID: Offline";
-            }
-            
-            console.log("App Initialized.");
+            // Set initial active menu
+            setActiveMenu('menuBuyNumbers'); // Start on the new Buy Numbers page
+
+            areUILoadedAndListenersSetup = true;
+            console.log("All UI Listeners Setup.");
         }
 
-        document.addEventListener('DOMContentLoaded', initializeApp);
+        // Function to update UI elements based on current data (can be called multiple times)
+        async function updateUIWithCurrentData() {
+            console.log("Updating UI with current data...");
+            const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
+            for (const type of allTypes) {
+                await updateTable(type);
+                updateLimitIndicator(type);
+            }
+            updateGrandTotalSummary();
+            updateCloseNumbersTable();
+            updateCloseNumbersTable2digit();
+            updateLargeAmountConfirmThresholdDisplay();
+            updateAllCustomersSummaryDisplay();
+            updateCurrentCustomerSummaryDisplay();
+            console.log("UI updated with current data.");
+        }
+
+        // Main initialization function called after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            setupAllUIListeners(); // Setup listeners once
+            initializeFirebase(); // Start Firebase init, which will then load data and update UI
+        });
+
+        // Function to load initial data and then trigger UI update
+        async function loadInitialDataAndInitializeUI() {
+            console.log("Loading initial data and then updating UI...");
+            const loadedData = await loadAllLottoDataFromFirestore();
+
+            // Populate global variables with loaded data
+            lottoData3digit = loadedData.lottoData_3digit || {};
+            lottoData2digitTop = loadedData.lottoData_2digitTop || {};
+            lottoData2digitBottom = loadedData.lottoData_2digitBottom || {};
+            lottoDataRunTop = loadedData.lottoData_RunTop || {};
+            lottoDataRunBottom = loadedData.lottoData_RunBottom || {};
+            lottoDataRun2Top = loadedData.lottoData_Run2Top || {};
+            lottoDataPack4 = loadedData.lottoData_Pack4 || {};
+            lottoDataPack5 = loadedData.lottoData_Pack5 || {};
+            limitThresholds = loadedData.limitThresholds || {};
+            closedNumbers = loadedData.closedNumbers || [];
+            closedNumbers2digit = loadedData.closedNumbers2digit || [];
+            allCustomerBuyData = loadedData.allCustomerBuyData || {};
+
+            await updateUIWithCurrentData(); // Update UI with loaded data
+            console.log("Initial data loaded and UI initialized.");
+        }
 
     </script>
 </body>
