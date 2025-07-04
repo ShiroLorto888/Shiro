@@ -1,0 +1,3266 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมคิดเลขหวย v2 (Update อั้นตรง อั้นโต๊ด)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        /* Styles from v58 (unchanged) */
+        body { font-family: 'Sarabun', 'Inter', sans-serif; font-size: 16px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background-color: #fefefe; margin: auto; padding: 30px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 0.5rem; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19); animation-name: animatetop; animation-duration: 0.4s }
+        @keyframes animatetop { from {top: -300px; opacity: 0} to {top: 0; opacity: 1} }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        #modalPermutationsList { max-height: 250px; overflow-y: auto; border: 1px solid #e5e7eb; padding: 0.75rem; border-radius: 0.375rem; background-color: #f9fafb; }
+        #modalPermutationsList li { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.35rem; border-bottom: 1px solid #f3f4f6; }
+        #modalPermutationsList li:last-child { border-bottom: none; }
+        #modalPermutationsList .perm-item { display: flex; align-items: center; }
+        #modalPermutationsList input[type="checkbox"] { margin-right: 1rem; height: 1.1rem; width: 1.1rem; flex-shrink: 0; }
+        #modalPermutationsList .perm-number { font-weight: 500; min-width: 50px; margin-right: 1rem; font-size: 1rem; }
+        #modalPermutationsList .perm-price-input { width: 90px; text-align: right; border: 1px solid #d1d5db; border-radius: 0.25rem; padding: 0.35rem 0.6rem; font-size: 1rem; }
+        .input-error { border-color: #f87171; box-shadow: 0 0 0 2px #fecaca; }
+        .menu-item { padding: 0.75rem 1.25rem; border-radius: 0.375rem; transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; cursor: pointer; font-weight: 500; color: #d1d5db; font-size: 0.95rem; }
+        .menu-item:hover { background-color: #2563eb; color: white; }
+        .menu-item.active { background-color: #1e40af; color: white; }
+        #hamburgerBtn { padding: 0.75rem; border-radius: 0.375rem; transition: background-color 0.2s ease-in-out; }
+        #hamburgerBtn svg { width: 1.75rem; height: 1.75rem; }
+        #hamburgerBtn:hover { background-color: #374151; }
+        #dropdownMenu { position: absolute; top: 100%; right: 0; background-color: white; border-radius: 0.375rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); z-index: 100; min-width: 180px; padding: 0.75rem 0; }
+        .dropdown-item { display: block; width: 100%; padding: 0.75rem 1.25rem; text-align: left; font-size: 1rem; color: #374151; transition: background-color 0.2s ease-in-out; }
+        .dropdown-item:hover { background-color: #f3f4f6; }
+        .dropdown-item.danger:hover { background-color: #fee2e2; color: #dc2626; }
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+        .button-group button { min-width: 80px; font-size: 1rem; padding-top: 0.6rem; padding-bottom: 0.6rem; }
+        th, td { padding: 0.75rem 0.6rem; font-size: 1rem; }
+        thead th { font-size: 0.9rem; font-weight: 700; }
+        tfoot td { font-weight: 700; background-color: #f3f4f6; border-top: 2px solid #e5e7eb; }
+        #grandTotalSummarySection { position: sticky; bottom: 0; left: 0; width: 100%; background-color: #1f2937; color: white; padding: 1rem; text-align: center; font-weight: 700; border-top: 2px solid #4b5563; z-index: 50; font-size: 1.1rem; }
+        .limit-indicator { position: absolute; top: 0.75rem; right: 1.25rem; font-size: 1rem; color: #dc2626; font-weight: 600; }
+        .limit-indicator .clear-limit-btn { color: #3b82f6; text-decoration: underline; margin-left: 0.75rem; cursor: pointer; font-size: 0.875rem; }
+         .limit-indicator .clear-limit-btn:hover { color: #1d4ed8; }
+         input[type=text], input[type=number] { padding: 0.6rem 0.75rem; font-size: 1.1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; }
+         label { font-size: 1rem; margin-bottom: 0.3rem; }
+         h1 { font-size: 1.75rem; margin-bottom: 1.75rem; }
+         .modal-content h2 { font-size: 1.4rem; margin-bottom: 1.25rem; }
+         .modal-input { border: 1px solid #d1d5db; border-radius: 0.375rem; px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg; padding: 0.6rem 0.75rem;}
+        /* Style for Boxed Modal Checkbox + Input */
+        .boxed-price-option { display: flex; align-items: center; margin-bottom: 1rem; gap: 0.75rem; }
+        .boxed-price-option input[type="checkbox"] { height: 1.2rem; width: 1.2rem; flex-shrink: 0; }
+        .boxed-price-option label { font-size: 1.1rem; font-weight: 500; flex-shrink: 0; min-width: 60px; /* Adjust as needed */ }
+        .boxed-price-option input[type="number"] { flex-grow: 1; } /* Make input take remaining space */
+        /* Style for closed permutations in modal */
+        .closed-perm { background-color: #fde2e2; opacity: 0.7; pointer-events: none; }
+        .closed-perm .perm-number::after { content: " (เลขปิด)"; color: #dc2626; font-size: 0.8em; margin-left: 5px; }
+
+        /* Generic Modal Styles */
+        #genericModal .modal-content {
+            padding: 2rem;
+            text-align: center;
+        }
+        #genericModalMessage {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            color: #374151;
+        }
+        #genericModal .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        /* Comparison Result Styles */
+        #comparisonResultDisplay, #buyComparisonResultDisplay {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            text-align: center;
+        }
+        .comparison-match {
+            background-color: #d1fae5; /* Green-100 */
+            color: #065f46; /* Green-800 */
+            border: 1px solid #34d399; /* Green-400 */
+        }
+        .comparison-mismatch {
+            background-color: #fee2e2; /* Red-100 */
+            color: #991b1b; /* Red-800 */
+            border: 1px solid #ef4444; /* Red-500 */
+        }
+        /* Temporary Confirmation Message Style */
+        .confirmation-message {
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin-top: 1rem;
+            text-align: center;
+            background-color: #d1fae5; /* Green-100 */
+            color: #065f46; /* Green-800 */
+            border: 1px solid #34d399; /* Green-400 */
+        }
+
+        /* Buy Page Specific Styles */
+        .buy-type-btn.active {
+            background-color: #3b82f6; /* Blue-500 */
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        /* Quick Add Price Buttons */
+        .quick-add-price-btn {
+            background-color: #e0e7ff; /* Indigo-100 */
+            color: #4338ca; /* Indigo-700 */
+            font-weight: 600;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.15s ease-in-out;
+            cursor: pointer;
+            border: 1px solid #c7d2fe; /* Indigo-200 */
+        }
+        .quick-add-price-btn:hover {
+            background-color: #c7d2fe; /* Indigo-200 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 pb-20">
+    <nav class="bg-gray-800 p-4 shadow-md mb-6">
+        <div class="container mx-auto flex items-center justify-between relative">
+            <div class="flex flex-wrap justify-center gap-x-5 gap-y-3">
+                <button id="menuBuyNumbers" data-page="pageBuyNumbers" class="menu-item">หน้า ซื้อเลข</button>
+                <button id="menu3digit" data-page="page3digit" class="menu-item">เลข3ตัว</button>
+                <button id="menu2digitTop" data-page="page2digitTop" class="menu-item">2ตัวบน</button>
+                <button id="menu2digitBottom" data-page="page2digitBottom" class="menu-item">2ตัวล่าง</button>
+                <button id="menuRunTop" data-page="pageRunTop" class="menu-item">วิ่งบน</button>
+                <button id="menuRunBottom" data-page="pageRunBottom" class="menu-item">วิ่งล่าง</button>
+                <button id="menuRun2Top" data-page="pageRun2Top" class="menu-item">วิ่ง2ตัวบน</button>
+                <button id="menuPack4" data-page="pagePack4" class="menu-item">แพ4ตัว</button>
+                <button id="menuPack5" data-page="pagePack5" class="menu-item">แพ5ตัว</button>
+                <button id="menuCloseNumbers" data-page="pageCloseNumbers" class="menu-item">ตัวปิด</button>
+                <button id="menuCloseNumbers2digit" data-page="pageCloseNumbers2digit" class="menu-item">ตัวปิด2หลัก</button>
+            </div>
+            <div class="relative">
+                <button id="hamburgerBtn" class="text-gray-300 focus:outline-none">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                </button>
+                <div id="dropdownMenu" class="hidden">
+                    <button id="dropdownExportBtn" data-page="pageExport" class="dropdown-item">Export To Excel</button>
+                    <button id="dropdownExportLimitedBtn" class="dropdown-item">Export เลขเกิน</button>
+                    <button id="dropdownClearAllBtn" class="dropdown-item danger">ลบทั้งหมด</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="pageContainer" class="container mx-auto mb-6">
+        <div id="pageBuyNumbers" class="page-content active">
+            <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">หน้า ซื้อเลข</h1>
+
+                <div class="mb-8 p-6 bg-blue-50 rounded-md border border-blue-200">
+                    <h2 class="text-xl font-bold text-blue-800 mb-4">ข้อมูลลูกค้า</h2>
+                    <div>
+                        <label for="customerNameInput" class="block text-base font-medium text-gray-700 mb-2">ชื่อลูกค้า (ถ้ามี):</label>
+                        <input type="text" id="customerNameInput"
+                               class="border border-blue-300 rounded-md px-4 py-3 w-full text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="ป้อนชื่อลูกค้า">
+                    </div>
+                    <div id="currentCustomerTotalDisplay" class="mt-4 text-lg font-semibold text-gray-800">
+                        ยอดรวมปัจจุบัน: <span id="currentCustomerTotalAmount">0.00</span> บาท
+                    </div>
+                </div>
+
+                <div class="mb-8 p-6 bg-gray-50 rounded-md border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">ป้อนเลขที่ซื้อ</h2>
+
+                    <div class="mb-5">
+                        <label class="block text-base font-medium text-gray-700 mb-2">เลือกประเภท:</label>
+                        <div id="buyPageTypeSelector" class="flex flex-wrap gap-2">
+                            <button data-type="3digit" class="buy-type-btn active bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition duration-150">3 ตัว</button>
+                            <button data-type="2digitTop" class="buy-type-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md transition duration-150">2 ตัวบน</button>
+                            <button data-type="2digitBottom" class="buy-type-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md transition duration-150">2 ตัวล่าง</button>
+                            <button data-type="RunTop" class="buy-type-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md transition duration-150">วิ่งบน</button>
+                            <button data-type="RunBottom" class="buy-type-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md transition duration-150">วิ่งล่าง</button>
+                            <button data-type="Run2Top" class="buy-type-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md transition duration-150">วิ่ง 2 ตัวบน</button>
+                            <button data-type="Pack4" class="buy-type-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md transition duration-150">แพ 4 ตัว</button>
+                            <button data-type="Pack5" class="buy-type-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md transition duration-150">แพ 5 ตัว</button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-end gap-6 mb-5">
+                        <div>
+                            <label for="buyNumberInput" class="block text-base font-medium text-gray-700 mb-2">เลขที่ซื้อ:</label>
+                            <input type="text" id="buyNumberInput" maxlength="3"
+                                   class="border border-gray-300 rounded-md px-4 py-3 w-32 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                   placeholder="XXX">
+                        </div>
+                        <div>
+                            <label for="buyPriceInput" class="block text-base font-medium text-gray-700 mb-2">ราคา:</label>
+                            <input type="number" id="buyPriceInput" step="any"
+                                   class="border border-gray-300 rounded-md px-4 py-3 w-36 text-right text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                   placeholder="0.00">
+                        </div>
+                        <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                            <button id="btnBuyStraight" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ตัวตรง</button>
+                            <button id="btnBuyBoxed" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150 hidden">ตัวโต๊ด</button>
+                            <button id="btnBuyReversed" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150 hidden">ตัวกลับ</button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-4" id="quickAddPriceButtons">
+                        <button class="quick-add-price-btn" data-value="5">5</button>
+                        <button class="quick-add-price-btn" data-value="10">10</button>
+                        <button class="quick-add-price-btn" data-value="20">20</button>
+                        <button class="quick-add-price-btn" data-value="30">30</button>
+                        <button class="quick-add-price-btn" data-value="40">40</button>
+                        <button class="quick-add-price-btn" data-value="50">50</button>
+                        <button class="quick-add-price-btn" data-value="100">100</button>
+                        <button class="quick-add-price-btn" data-value="200">200</button>
+                        <button class="quick-add-price-btn" data-value="300">300</button>
+                        <button class="quick-add-price-btn" data-value="400">400</button>
+                        <button class="quick-add-price-btn" data-value="500">500</button>
+                        <button class="quick-add-price-btn" data-value="1000">1000</button>
+                        <button class="quick-add-price-btn" data-value="2000">2000</button>
+                        <button class="quick-add-price-btn" data-value="3000">3000</button>
+                        <button class="quick-add-price-btn" data-value="4000">4000</button>
+                        <button class="quick-add-price-btn" data-value="5000">5000</button>
+                    </div>
+                    <div id="confirmationMessageBuyNumbers" class="confirmation-message hidden">
+                        </div>
+                </div>
+
+                <div id="currentCustomerSummaryDiv" class="mb-8 p-6 bg-green-50 rounded-md border border-green-200 min-h-[100px] hidden">
+                    <h2 class="text-xl font-bold text-green-800 mb-4">รายการที่กำลังบันทึกสำหรับ: <span id="currentCustomerNameDisplay"></span></h2>
+                    <ul id="currentCustomerEntriesList" class="list-disc pl-5 space-y-1 text-gray-700">
+                        </ul>
+                </div>
+
+                <div class="flex justify-center gap-4 mb-8">
+                    <button id="btnCloseCustomer" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg shadow transition duration-150 text-xl">
+                        ปิดยอดลูกค้าคนนี้
+                    </button>
+                    <button id="btnNewCustomer" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-8 rounded-lg shadow transition duration-150 text-xl">
+                        เริ่มลูกค้าใหม่ (ล้างรายการปัจจุบัน)
+                    </button>
+                </div>
+
+                <div class="mb-8 p-6 bg-blue-50 rounded-md border border-blue-200">
+                    <h2 class="text-xl font-bold text-blue-800 mb-4">ตรวจสอบยอดรวมที่ลูกค้าแจ้ง</h2>
+                    <div class="flex items-end gap-4">
+                        <div class="flex-grow">
+                            <label for="buyCustomerCheckTotalInput" class="block text-base font-medium text-gray-700 mb-2">ยอดรวมที่ลูกค้าแจ้ง:</label>
+                            <input type="number" id="buyCustomerCheckTotalInput" step="any"
+                                   class="border border-blue-300 rounded-md px-4 py-3 w-full text-right text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   placeholder="0.00">
+                        </div>
+                        <button id="btnBuyCompareCustomerTotal" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md shadow transition duration-150 flex-shrink-0">
+                            เปรียบเทียบ
+                        </button>
+                    </div>
+                    <div id="buyComparisonResultDisplay" class="hidden mt-4 p-3 rounded-md text-center">
+                        </div>
+                </div>
+
+                <div class="mt-10 pt-8 border-t border-gray-300">
+                    <h2 class="text-2xl font-bold text-indigo-700 mb-6 text-center">สรุปยอดของลูกค้าทั้งหมด</h2>
+                    <div id="allCustomersSummaryContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page3digit" class="page-content">
+            <div class="max-w-7xl mx-auto bg-white p-8 rounded-lg shadow-lg relative">
+                <div id="limitIndicator3digit" class="limit-indicator hidden"></div>
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">เลข 3 ตัว</h1>
+                <div class="input-section mb-8 p-6 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-end gap-6">
+                    <div>
+                        <label for="numberInput3digit" class="block text-base font-medium text-gray-700 mb-2">ป้อนเลข 3 หลัก:</label>
+                        <input type="text" id="numberInput3digit" maxlength="3" pattern="\d{3}"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-32 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="000">
+                    </div>
+                    <div>
+                        <label for="priceInput3digit" class="block text-base font-medium text-gray-700 mb-2">ราคา:</label>
+                        <input type="number" id="priceInput3digit" step="any"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-36 text-right text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0.00">
+                    </div>
+                    <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                        <button id="btnStraight3digit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ตัวตรง</button>
+                        <button id="btnReversed3digit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ตัวกลับ</button>
+                        <button id="btnBoxed3digit" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ตัวโต๊ด</button>
+                        <button id="btnLimit3digit" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">อั้น(ตรง)</button>
+                        <button id="btnLimit3digitBoxed" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">อั้น(โต๊ด)</button>
+                        <button id="btnExport3digit" class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export</button>
+                    </div>
+                </div>
+                <div id="confirmationMessage3digit" class="confirmation-message hidden">
+                    </div>
+                <div class="table-section mb-8 overflow-x-auto">
+                    <table id="table3digit" class="min-w-full bg-white border border-gray-300 rounded-md">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border-b text-left font-bold text-gray-600">ตัวเลข</th>
+                                <th class="border-b text-right font-bold text-gray-600">ตัวตรง (สุทธิ)</th>
+                                <th class="border-b text-right font-bold text-gray-600">ตัวโต๊ด (สุทธิ)</th>
+                                <th class="border-b text-right font-bold text-gray-600">เกิน(ตรง)</th>
+                                <th class="border-b text-right font-bold text-gray-600">เกิน(โต๊ด)</th>
+                                <th class="border-b text-right font-bold text-gray-600">ยอดรวม</th>
+                                <th class="border-b text-center font-bold text-gray-600">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lottoTableBody3digit"></tbody>
+                        <tfoot id="lottoTableFooter3digit"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="page2digitTop" class="page-content">
+             <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg relative">
+                <div id="limitIndicator2digitTop" class="limit-indicator hidden"></div>
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">2 ตัวบน</h1>
+                <div class="input-section mb-8 p-6 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-end gap-6">
+                    <div>
+                        <label for="numberInput2digitTop" class="block text-base font-medium text-gray-700 mb-2">ป้อนเลข 2 หลัก:</label>
+                        <input type="text" id="numberInput2digitTop" maxlength="2" pattern="\d{2}"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-28 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="00">
+                    </div>
+                    <div>
+                        <label for="priceInput2digitTop" class="block text-base font-medium text-gray-700 mb-2">ราคา:</label>
+                        <input type="number" id="priceInput2digitTop" step="any"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-36 text-right text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0.00">
+                    </div>
+                    <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                        <button id="btnStraight2digitTop" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ตัวตรง</button>
+                        <button id="btnReversed2digitTop" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ตัวกลับ</button>
+                        <button id="btnLimit2digitTop" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">อั้น</button>
+                        <button id="btnExport2digitTop" class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export (หน้านี้)</button>
+                        <button id="btnExport2digitTopExcess" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export เกิน</button>
+                    </div>
+                </div>
+                <div id="confirmationMessage2digitTop" class="confirmation-message hidden">
+                    </div>
+                <div class="table-section mb-8 overflow-x-auto">
+                    <table id="table2digitTop" class="min-w-full bg-white border border-gray-300 rounded-md">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border-b text-left font-bold text-gray-600">ตัวเลข</th>
+                                <th class="border-b text-right font-bold text-gray-600">ราคา (สุทธิ)</th>
+                                <th class="border-b text-right font-bold text-gray-600">เกิน</th>
+                                <th class="border-b text-right font-bold text-gray-600">ยอดรวม</th>
+                                <th class="border-b text-center font-bold text-gray-600">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lottoTableBody2digitTop"></tbody>
+                        <tfoot id="lottoTableFooter2digitTop"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="page2digitBottom" class="page-content">
+             <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg relative">
+                <div id="limitIndicator2digitBottom" class="limit-indicator hidden"></div>
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">2 ตัวล่าง</h1>
+                <div class="input-section mb-8 p-6 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-end gap-6">
+                    <div>
+                        <label for="numberInput2digitBottom" class="block text-base font-medium text-gray-700 mb-2">ป้อนเลข 2 หลัก:</label>
+                        <input type="text" id="numberInput2digitBottom" maxlength="2" pattern="\d{2}"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-28 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="00">
+                    </div>
+                    <div>
+                        <label for="priceInput2digitBottom" class="block text-base font-medium text-gray-700 mb-2">ราคา:</label>
+                        <input type="number" id="priceInput2digitBottom" step="any"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-36 text-right text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0.00">
+                    </div>
+                    <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                        <button id="btnStraight2digitBottom" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ตัวตรง</button>
+                        <button id="btnReversed2digitBottom" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ตัวกลับ</button>
+                        <button id="btnLimit2digitBottom" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">อั้น</button>
+                        <button id="btnExport2digitBottom" class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export (หน้านี้)</button>
+                    </div>
+                </div>
+                <div id="confirmationMessage2digitBottom" class="confirmation-message hidden">
+                    </div>
+                <div class="table-section mb-8 overflow-x-auto">
+                    <table id="table2digitBottom" class="min-w-full bg-white border border-gray-300 rounded-md">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border-b text-left font-bold text-gray-600">ตัวเลข</th>
+                                <th class="border-b text-right font-bold text-gray-600">ราคา (สุทธิ)</th>
+                                <th class="border-b text-right font-bold text-gray-600">เกิน</th>
+                                <th class="border-b text-right font-bold text-gray-600">ยอดรวม</th>
+                                <th class="border-b text-center font-bold text-gray-600">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lottoTableBody2digitBottom"></tbody>
+                         <tfoot id="lottoTableFooter2digitBottom"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+         <div id="pageRunTop" class="page-content">
+             <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg relative">
+                <div id="limitIndicatorRunTop" class="limit-indicator hidden"></div>
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">วิ่งบน</h1>
+                <div class="input-section mb-8 p-6 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-end gap-6">
+                    <div>
+                        <label for="numberInputRunTop" class="block text-base font-medium text-gray-700 mb-2">ป้อนเลข 0-9:</label>
+                        <input type="text" id="numberInputRunTop" maxlength="1" pattern="\d{1}"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-24 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0">
+                    </div>
+                    <div>
+                        <label for="priceInputRunTop" class="block text-base font-medium text-gray-700 mb-2">ราคา:</label>
+                        <input type="number" id="priceInputRunTop" step="any"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-36 text-right text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0.00">
+                    </div>
+                    <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                        <button id="btnAddRunTop" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">เพิ่ม</button>
+                        <button id="btnLimitRunTop" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">อั้น</button>
+                        <button id="btnExportRunTop" class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export (หน้านี้)</button>
+                    </div>
+                </div>
+                <div id="confirmationMessageRunTop" class="confirmation-message hidden">
+                    </div>
+                <div class="table-section mb-8 overflow-x-auto">
+                    <table id="tableRunTop" class="min-w-full bg-white border border-gray-300 rounded-md">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border-b text-left font-bold text-gray-600">ตัวเลข</th>
+                                <th class="border-b text-right font-bold text-gray-600">ราคา (สุทธิ)</th>
+                                <th class="border-b text-right font-bold text-gray-600">เกิน</th>
+                                <th class="border-b text-right font-bold text-gray-600">ยอดรวม</th>
+                                <th class="border-b text-center font-bold text-gray-600">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lottoTableBodyRunTop"></tbody>
+                         <tfoot id="lottoTableFooterRunTop"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="pageRunBottom" class="page-content">
+             <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg relative">
+                <div id="limitIndicatorRunBottom" class="limit-indicator hidden"></div>
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">วิ่งล่าง</h1>
+                <div class="input-section mb-8 p-6 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-end gap-6">
+                    <div>
+                        <label for="numberInputRunBottom" class="block text-base font-medium text-gray-700 mb-2">ป้อนเลข 0-9:</label>
+                        <input type="text" id="numberInputRunBottom" maxlength="1" pattern="\d{1}"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-24 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0">
+                    </div>
+                    <div>
+                        <label for="priceInputRunBottom" class="block text-base font-medium text-gray-700 mb-2">ราคา:</label>
+                        <input type="number" id="priceInputRunBottom" step="any"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-36 text-right text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0.00">
+                    </div>
+                    <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                        <button id="btnAddRunBottom" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">เพิ่ม</button>
+                        <button id="btnLimitRunBottom" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">อั้น</button>
+                        <button id="btnExportRunBottom" class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export (หน้านี้)</button>
+                    </div>
+                </div>
+                <div id="confirmationMessageRunBottom" class="confirmation-message hidden">
+                    </div>
+                <div class="table-section mb-8 overflow-x-auto">
+                    <table id="tableRunBottom" class="min-w-full bg-white border border-gray-300 rounded-md">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border-b text-left font-bold text-gray-600">ตัวเลข</th>
+                                <th class="border-b text-right font-bold text-gray-600">ราคา (สุทธิ)</th>
+                                <th class="border-b text-right font-bold text-gray-600">เกิน</th>
+                                <th class="border-b text-right font-bold text-gray-600">ยอดรวม</th>
+                                <th class="border-b text-center font-bold text-gray-600">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lottoTableBodyRunBottom"></tbody>
+                         <tfoot id="lottoTableFooterRunBottom"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="pageRun2Top" class="page-content">
+             <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg relative">
+                <div id="limitIndicatorRun2Top" class="limit-indicator hidden"></div>
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">วิ่ง 2 ตัวบน</h1>
+                <div class="input-section mb-8 p-6 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-end gap-6">
+                    <div>
+                        <label for="numberInputRun2Top" class="block text-base font-medium text-gray-700 mb-2">ป้อนเลข 2 หลัก:</label>
+                        <input type="text" id="numberInputRun2Top" maxlength="2" pattern="\d{2}"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-28 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="00">
+                    </div>
+                    <div>
+                        <label for="priceInputRun2Top" class="block text-base font-medium text-gray-700 mb-2">ราคา:</label>
+                        <input type="number" id="priceInputRun2Top" step="any"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-36 text-right text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0.00">
+                    </div>
+                    <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                        <button id="btnAddRun2Top" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">เพิ่ม</button>
+                        <button id="btnLimitRun2Top" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">อั้น</button>
+                        <button id="btnExportRun2Top" class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export (หน้านี้)</button>
+                    </div>
+                </div>
+                <div id="confirmationMessageRun2Top" class="confirmation-message hidden">
+                    </div>
+                <div class="table-section mb-8 overflow-x-auto">
+                    <table id="tableRun2Top" class="min-w-full bg-white border border-gray-300 rounded-md">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border-b text-left font-bold text-gray-600">ตัวเลข</th>
+                                <th class="border-b text-right font-bold text-gray-600">ราคา (สุทธิ)</th>
+                                <th class="border-b text-right font-bold text-gray-600">เกิน</th>
+                                <th class="border-b text-right font-bold text-gray-600">ยอดรวม</th>
+                                <th class="border-b text-center font-bold text-gray-600">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lottoTableBodyRun2Top"></tbody>
+                         <tfoot id="lottoTableFooterRun2Top"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="pagePack4" class="page-content">
+             <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg relative">
+                <div id="limitIndicatorPack4" class="limit-indicator hidden"></div>
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">แพ 4 ตัว</h1>
+                <div class="input-section mb-8 p-6 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-end gap-6">
+                    <div>
+                        <label for="numberInputPack4" class="block text-base font-medium text-gray-700 mb-2">ป้อนเลข 4 หลัก:</label>
+                        <input type="text" id="numberInputPack4" maxlength="4" pattern="\d{4}"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-36 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0000">
+                    </div>
+                    <div>
+                        <label for="priceInputPack4" class="block text-base font-medium text-gray-700 mb-2">ราคา:</label>
+                        <input type="number" id="priceInputPack4" step="any"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-36 text-right text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0.00">
+                    </div>
+                    <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                        <button id="btnAddPack4" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">เพิ่ม</button>
+                        <button id="btnLimitPack4" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">อั้น</button>
+                        <button id="btnExportPack4" class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export (หน้านี้)</button>
+                    </div>
+                </div>
+                <div id="confirmationMessagePack4" class="confirmation-message hidden">
+                    </div>
+                <div class="table-section mb-8 overflow-x-auto">
+                    <table id="tablePack4" class="min-w-full bg-white border border-gray-300 rounded-md">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border-b text-left font-bold text-gray-600">ตัวเลข</th>
+                                <th class="border-b text-right font-bold text-gray-600">ราคา (สุทธิ)</th>
+                                <th class="border-b text-right font-bold text-gray-600">เกิน</th>
+                                <th class="border-b text-right font-bold text-gray-600">ยอดรวม</th>
+                                <th class="border-b text-center font-bold text-gray-600">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lottoTableBodyPack4"></tbody>
+                         <tfoot id="lottoTableFooterPack4"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="pagePack5" class="page-content">
+             <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg relative">
+                <div id="limitIndicatorPack5" class="limit-indicator hidden"></div>
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">แพ 5 ตัว</h1>
+                <div class="input-section mb-8 p-6 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-end gap-6">
+                    <div>
+                        <label for="numberInputPack5" class="block text-base font-medium text-gray-700 mb-2">ป้อนเลข 5 หลัก:</label>
+                        <input type="text" id="numberInputPack5" maxlength="5" pattern="\d{5}"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-40 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="00000">
+                    </div>
+                    <div>
+                        <label for="priceInputPack5" class="block text-base font-medium text-gray-700 mb-2">ราคา:</label>
+                        <input type="number" id="priceInputPack5" step="any"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-36 text-right text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="0.00">
+                    </div>
+                    <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                        <button id="btnAddPack5" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">เพิ่ม</button>
+                        <button id="btnLimitPack5" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">อั้น</button>
+                        <button id="btnExportPack5" class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">Export (หน้านี้)</button>
+                    </div>
+                </div>
+                <div id="confirmationMessagePack5" class="confirmation-message hidden">
+                    </div>
+                <div class="table-section mb-8 overflow-x-auto">
+                    <table id="tablePack5" class="min-w-full bg-white border border-gray-300 rounded-md">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border-b text-left font-bold text-gray-600">ตัวเลข</th>
+                                <th class="border-b text-right font-bold text-gray-600">ราคา (สุทธิ)</th>
+                                <th class="border-b text-right font-bold text-gray-600">เกิน</th>
+                                <th class="border-b text-right font-bold text-gray-600">ยอดรวม</th>
+                                <th class="border-b text-center font-bold text-gray-600">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lottoTableBodyPack5"></tbody>
+                         <tfoot id="lottoTableFooterPack5"></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="pageExport" class="page-content">
+             <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">Export ข้อมูลเป็น Excel (.xlsx)</h1>
+                <div class="space-y-8">
+                    <div class="p-6 border rounded-md bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-5">
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-1">ข้อมูลเลข 3 ตัว</h3>
+                            <p class="text-base text-gray-600">Export ตารางเลข 3 ตัวตามที่แสดงผล (ไม่รวมยอดเกิน)</p>
+                        </div>
+                        <div class="flex gap-4 flex-shrink-0">
+                             <button id="exportPage3digit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-5 rounded-md text-base">Export</button>
+                        </div>
+                    </div>
+                     <div class="p-6 border rounded-md bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-5">
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-1">ข้อมูล 2 ตัวบน</h3>
+                            <p class="text-base text-gray-600">Export ตาราง 2 ตัวบนตามที่แสดงผล (ไม่รวมยอดเกิน)</p>
+                        </div>
+                         <div class="flex gap-4 flex-shrink-0">
+                             <button id="exportPage2digitTop" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-5 rounded-md text-base">Export</button>
+                         </div>
+                    </div>
+                     <div class="p-6 border rounded-md bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-5">
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-1">ข้อมูล 2 ตัวล่าง</h3>
+                            <p class="text-base text-gray-600">Export ตาราง 2 ตัวล่างตามที่แสดงผล (ไม่รวมยอดเกิน)</p>
+                        </div>
+                         <div class="flex gap-4 flex-shrink-0">
+                             <button id="exportPage2digitBottom" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-5 rounded-md text-base">Export</button>
+                         </div>
+                    </div>
+                     <div class="p-6 border rounded-md bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-5">
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-1">ข้อมูลวิ่งบน</h3>
+                            <p class="text-base text-gray-600">Export ตารางวิ่งบนตามที่แสดงผล (ไม่รวมยอดเกิน)</p>
+                        </div>
+                         <div class="flex gap-4 flex-shrink-0">
+                             <button id="exportPageRunTop" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-5 rounded-md text-base">Export</button>
+                         </div>
+                    </div>
+                     <div class="p-6 border rounded-md bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-5">
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-1">ข้อมูลวิ่งล่าง</h3>
+                            <p class="text-base text-gray-600">Export ตารางวิ่งล่างตามที่แสดงผล (ไม่รวมยอดเกิน)</p>
+                        </div>
+                         <div class="flex gap-4 flex-shrink-0">
+                             <button id="exportPageRunBottom" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-5 rounded-md text-base">Export</button>
+                         </div>
+                    </div>
+                     <div class="p-6 border rounded-md bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-5">
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-1">ข้อมูลวิ่ง 2 ตัวบน</h3>
+                            <p class="text-base text-gray-600">Export ตารางวิ่ง 2 ตัวบนตามที่แสดงผล (ไม่รวมยอดเกิน)</p>
+                        </div>
+                         <div class="flex gap-4 flex-shrink-0">
+                             <button id="exportPageRun2Top" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-5 rounded-md text-base">Export</button>
+                         </div>
+                    </div>
+                     <div class="p-6 border rounded-md bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-5">
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-1">ข้อมูลแพ 4 ตัว</h3>
+                            <p class="text-base text-gray-600">Export ตารางแพ 4 ตัวตามที่แสดงผล (ไม่รวมยอดเกิน)</p>
+                        </div>
+                         <div class="flex gap-4 flex-shrink-0">
+                             <button id="exportPagePack4" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-5 rounded-md text-base">Export</button>
+                         </div>
+                    </div>
+                     <div class="p-6 border rounded-md bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-5">
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-1">ข้อมูลแพ 5 ตัว</h3>
+                            <p class="text-base text-gray-600">Export ตารางแพ 5 ตัวตามที่แสดงผล (ไม่รวมยอดเกิน)</p>
+                        </div>
+                         <div class="flex gap-4 flex-shrink-0">
+                             <button id="exportPagePack5" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-5 rounded-md text-base">Export</button>
+                         </div>
+                    </div>
+
+                    <div class="mt-10 pt-8 border-t border-gray-300 text-center">
+                        <button id="exportAllTablesBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-8 rounded-lg shadow-lg transition duration-150 text-xl">
+                            Export ทุกตาราง (ไฟล์เดียว หลายชีต)
+                        </button>
+                    </div>
+
+                    <div class="mt-10 pt-8 border-t border-gray-300">
+                        <h2 class="text-2xl font-bold text-indigo-700 mb-6 text-center">ตรวจสอบยอดรวมกับลูกค้า</h2>
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 p-6 bg-blue-50 rounded-md border border-blue-200">
+                            <div>
+                                <label for="customerTotalInput" class="block text-base font-medium text-gray-700 mb-2">ยอดรวมที่ลูกค้าแจ้ง:</label>
+                                <input type="number" id="customerTotalInput" step="any"
+                                       class="border border-blue-300 rounded-md px-4 py-3 w-40 text-right text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="0.00">
+                            </div>
+                            <div class="mt-5 sm:mt-0">
+                                <button id="compareTotalsBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-md shadow transition duration-150">เปรียบเทียบยอด</button>
+                            </div>
+                        </div>
+                        <div id="comparisonResultDisplay" class="hidden mt-6">
+                            </div>
+                    </div>
+                    <div class="mt-10 pt-8 border-t border-gray-300">
+                        <h2 class="text-2xl font-bold text-indigo-700 mb-6 text-center">ตั้งค่าการยืนยันยอดสูง</h2>
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 p-6 bg-yellow-50 rounded-md border border-yellow-200">
+                            <div>
+                                <label for="largeAmountConfirmThresholdInput" class="block text-base font-medium text-gray-700 mb-2">ยอดเงินที่ต้องยืนยัน (บาท):</label>
+                                <input type="number" id="largeAmountConfirmThresholdInput" step="any"
+                                       class="border border-yellow-300 rounded-md px-4 py-3 w-40 text-right text-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                                       placeholder="5000.00">
+                            </div>
+                            <div class="mt-5 sm:mt-0">
+                                <button id="setLargeAmountConfirmThresholdBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-3 px-6 rounded-md shadow transition duration-150">ตั้งค่า</button>
+                            </div>
+                        </div>
+                        <div id="largeAmountConfirmThresholdDisplay" class="mt-4 text-center text-gray-600 text-sm">
+                            </div>
+                    </div>
+                    </div>
+            </div>
+        </div>
+
+        <div id="pageCloseNumbers" class="page-content">
+            <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">ตัวปิด</h1>
+                <div class="input-section mb-8 p-6 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-end gap-6">
+                    <div>
+                        <label for="closeNumberInput" class="block text-base font-medium text-gray-700 mb-2">ป้อนเลข 3 หลักที่ต้องการปิด:</label>
+                        <input type="text" id="closeNumberInput" maxlength="3" pattern="\d{3}"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-32 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="000">
+                    </div>
+                    <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                        <button id="btnAddCloseNumber" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">เพิ่มเลขปิด</button>
+                        <button id="btnDeleteAllCloseNumbers" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ลบเลขปิดทั้งหมด</button>
+                    </div>
+                </div>
+                <div id="confirmationMessageCloseNumbers" class="confirmation-message hidden">
+                    </div>
+                <div class="table-section mb-8 overflow-x-auto">
+                    <table id="closeNumbersTable" class="min-w-full bg-white border border-gray-300 rounded-md">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border-b text-left font-bold text-gray-600">เลขปิด</th>
+                                <th class="border-b text-center font-bold text-gray-600">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="closeNumbersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="pageCloseNumbers2digit" class="page-content">
+            <div class="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+                <h1 class="text-3xl font-bold text-indigo-700 mb-8 text-center">ตัวปิด 2 หลัก</h1>
+                <div class="input-section mb-8 p-6 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-end gap-6">
+                    <div>
+                        <label for="closeNumberInput2digit" class="block text-base font-medium text-gray-700 mb-2">ป้อนเลข 2 หลักที่ต้องการปิด:</label>
+                        <input type="text" id="closeNumberInput2digit" maxlength="2" pattern="\d{2}"
+                               class="border border-gray-300 rounded-md px-4 py-3 w-28 text-center text-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                               placeholder="00">
+                    </div>
+                    <div class="button-group flex flex-wrap gap-3 mt-5 sm:mt-0 sm:ml-6">
+                        <button id="btnAddCloseNumber2digit" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">เพิ่มเลขปิด</button>
+                        <button id="btnDeleteAllCloseNumbers2digit" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-5 rounded-md shadow transition duration-150">ลบเลขปิดทั้งหมด</button>
+                    </div>
+                </div>
+                <div id="confirmationMessageCloseNumbers2digit" class="confirmation-message hidden">
+                    </div>
+                <div class="table-section mb-8 overflow-x-auto">
+                    <table id="closeNumbersTable2digit" class="min-w-full bg-white border border-gray-300 rounded-md">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border-b text-left font-bold text-gray-600">เลขปิด</th>
+                                <th class="border-b text-center font-bold text-gray-600">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="closeNumbersTableBody2digit"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="grandTotalSummarySection" class="flex items-center justify-between px-4">
+         <span>ยอดรวมทั้งหมด: กำลังคำนวณ...</span>
+         <span id="userIdDisplay" class="text-sm">User ID: N/A</span>
+     </div>
+
+    <div id="priceModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle" class="text-2xl font-bold mb-5">ป้อนราคา</h2>
+            <p id="modalPrompt" class="mb-5 text-base">รายละเอียด...</p>
+            <div id="modalPermutationsContainer" class="mb-5 hidden">
+                <label class="block text-base font-medium text-gray-700 mb-2">เลือกเลขกลับและแก้ไขราคา:</label>
+                <div class="flex items-center mb-3">
+                    <input type="checkbox" id="checkAllPerms" class="mr-3 h-5 w-5">
+                    <label for="checkAllPerms" class="text-base text-gray-600">เลือกทั้งหมด / ไม่เลือกทั้งหมด</label>
+                </div>
+                <ul id="modalPermutationsList"></ul>
+            </div>
+            <div id="mainModalPriceContainer" class="space-y-4">
+                <div>
+                    <label for="modalPriceInput" class="block text-base font-medium text-gray-700 mb-2">ราคาอั้นสูงสุด:</label>
+                    <input type="number" id="modalPriceInput" step="any" class="modal-input w-full" placeholder="0.00">
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 mt-8">
+                <button id="modalCancelBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-md transition duration-150 text-base">ยกเลิก</button>
+                <button id="modalOkBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 px-6 rounded-md transition duration-150 text-base">ตกลง</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2 id="editModalTitle" class="text-2xl font-bold mb-5">แก้ไขข้อมูลเลข ...</h2>
+            <div class="space-y-4 mb-5">
+                <div>
+                    <label for="editStraightInput" class="block text-base font-medium text-gray-700 mb-2">ราคา (ตั้งต้น):</label>
+                    <input type="number" id="editStraightInput" step="any" class="modal-input w-full" placeholder="0.00">
+                </div>
+                <div id="editBoxedContainer">
+                    <label for="editBoxedInput" class="block text-base font-medium text-gray-700 mb-2">ราคาโต๊ด:</label>
+                    <input type="number" id="editBoxedInput" step="any" class="modal-input w-full" placeholder="0.00">
+                </div>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="editModalCancelBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-md transition duration-150 text-base">ยกเลิก</button>
+                <button id="editModalOkBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 px-6 rounded-md transition duration-150 text-base">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="boxedModal" class="modal">
+        <div class="modal-content">
+            <h2 id="boxedModalTitle" class="text-2xl font-bold mb-5">เพิ่ม/แก้ไข เลข ...</h2>
+            <div class="space-y-4 mb-6">
+                 <div class="boxed-price-option">
+                     <input type="checkbox" id="boxedModalStraightCheck" checked>
+                     <label for="boxedModalStraightCheck">ตัวตรง</label>
+                     <input type="number" id="boxedModalStraightPriceInput" step="any" class="modal-input" placeholder="0.00">
+                 </div>
+                 <div class="boxed-price-option">
+                     <input type="checkbox" id="boxedModalBoxedCheck" checked>
+                     <label for="boxedModalBoxedCheck">ตัวโต๊ด</label>
+                     <input type="number" id="boxedModalBoxedPriceInput" step="any" class="modal-input" placeholder="0.00">
+                 </div>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button id="boxedModalCancelBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-md transition duration-150 text-base">ยกเลิก</button>
+                <button id="boxedModalOkBtn" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-md transition duration-150 text-base">ตกลง</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="genericModal" class="modal">
+        <div class="modal-content">
+            <h2 id="genericModalTitle" class="text-2xl font-bold mb-5"></h2>
+            <p id="genericModalMessage" class="mb-5"></p>
+            <div id="genericModalButtons" class="modal-buttons">
+                <button id="genericModalOkBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 px-6 rounded-md transition duration-150 text-base">ตกลง</button>
+                <button id="genericModalCancelBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-md transition duration-150 text-base hidden">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Firebase Integration START ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaXvsGBRdWddimVLgdcT5x7zhO_JvASp8",
+            authDomain: "lotto-7fd8b.firebaseapp.com",
+            projectId: "lotto-7fd8b",
+            storageBucket: "lotto-7fd8b.firebasestorage.app",
+            messagingSenderId: "676864882005",
+            appId: "1:676864882005:web:015fc4aa5805e816942bdc",
+            measurementId: "G-TTR8EXE58R"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentUserId = null;
+        // --- Firebase Integration END ---
+
+
+        // --- Firebase Data Storage Functions START ---
+        async function saveData(type, dataObject) {
+            if (!currentUserId) return;
+            // Saves a single data type (e.g., 'lottoData3digit') to a document named after the user ID.
+            // The data is stored in a map field within that document.
+            const userDocRef = db.collection('users').doc(currentUserId);
+            try {
+                await userDocRef.set({
+                    [type]: dataObject
+                }, { merge: true }); // Use merge:true to avoid overwriting other data types in the same document.
+            } catch (error) {
+                console.error("Error saving data for type " + type + ": ", error);
+                await customAlert("เกิดข้อผิดพลาดในการบันทึกข้อมูลออนไลน์");
+            }
+        }
+
+        async function loadData(type) {
+            if (!currentUserId) return {};
+            const userDocRef = db.collection('users').doc(currentUserId);
+            try {
+                const doc = await userDocRef.get();
+                if (doc.exists && doc.data()[type]) {
+                    return doc.data()[type];
+                } else {
+                    return {}; // Return empty object if no data for this type yet
+                }
+            } catch (error) {
+                console.error("Error loading data for type " + type + ": ", error);
+                await customAlert("เกิดข้อผิดพลาดในการโหลดข้อมูลออนไลน์");
+                return {};
+            }
+        }
+        
+        // Generic function to save any top-level object (like limitThresholds, closedNumbers, etc.)
+        async function saveUserDataObject(objectName, dataObject) {
+            if (!currentUserId) return;
+            const userDocRef = db.collection('users').doc(currentUserId);
+             try {
+                await userDocRef.set({ [objectName]: dataObject }, { merge: true });
+            } catch (error) {
+                console.error(`Error saving ${objectName}: `, error);
+                await customAlert(`เกิดข้อผิดพลาดในการบันทึก ${objectName}`);
+            }
+        }
+        
+        // Generic function to load any top-level object
+        async function loadUserDataObject(objectName, defaultValue) {
+            if (!currentUserId) return defaultValue;
+            const userDocRef = db.collection('users').doc(currentUserId);
+            try {
+                const doc = await userDocRef.get();
+                if (doc.exists && doc.data()[objectName] !== undefined) {
+                    return doc.data()[objectName];
+                } else {
+                    return defaultValue;
+                }
+            } catch (error) {
+                console.error(`Error loading ${objectName}: `, error);
+                await customAlert(`เกิดข้อผิดพลาดในการโหลด ${objectName}`);
+                return defaultValue;
+            }
+        }
+
+        // --- Firebase Data Storage Functions END ---
+
+
+        let lottoData3digit = {};
+        let lottoData2digitTop = {};
+        let lottoData2digitBottom = {};
+        let lottoDataRunTop = {};
+        let lottoDataRunBottom = {};
+        let lottoDataRun2Top = {};
+        let lottoDataPack4 = {};
+        let lottoDataPack5 = {};
+        let limitThresholds = {};
+        let closedNumbers = [];
+        let closedNumbers2digit = [];
+
+        let currentPageType = '3digit';
+        let currentGrandTotal = 0; // New global variable to store the grand total
+
+        // NEW: Buy Numbers Page Data
+        let allCustomerBuyData = {}; // Stores { customerName: [{entries}, total, customerCheckTotal], ... }
+        let currentCustomerName = '';
+        let currentCustomerPendingEntries = []; // Temporary storage for entries before 'ปิดยอด'
+        let currentBuyPageLottoType = '3digit'; // Default active type on buy page
+
+
+        // --- DOM Elements (Declared here, assigned in DOMContentLoaded) ---
+        let pageContainer;
+        let allPageContents;
+        let menuItems;
+        let hamburgerBtn;
+        let dropdownMenu;
+        let dropdownExportBtn;
+        let dropdownExportLimitedBtn;
+        let dropdownClearAllBtn;
+        // 3 Digit
+        let page3digit;
+        let numberInput3digit;
+        let priceInput3digit;
+        let btnStraight3digit;
+        let btnReversed3digit;
+        let btnBoxed3digit;
+        let btnLimit3digit;
+        let btnLimit3digitBoxed;
+        let btnExport3digit;
+        let tableBody3digit;
+        let tableFooter3digit;
+        let limitIndicator3digit;
+        let confirmationMessage3digit;
+        // 2 Digit Top
+        let page2digitTop;
+        let numberInput2digitTop;
+        let priceInput2digitTop;
+        let btnStraight2digitTop;
+        let btnReversed2digitTop;
+        let btnLimit2digitTop;
+        let btnExport2digitTop;
+        let btnExport2digitTopExcess;
+        let tableBody2digitTop;
+        let tableFooter2digitTop;
+        let limitIndicator2digitTop;
+        let confirmationMessage2digitTop;
+        // 2 Digit Bottom
+        let page2digitBottom;
+        let numberInput2digitBottom;
+        let priceInput2digitBottom;
+        let btnStraight2digitBottom;
+        let btnReversed2digitBottom;
+        let btnLimit2digitBottom;
+        let btnExport2digitBottom;
+        let tableBody2digitBottom;
+        let tableFooter2digitBottom;
+        let limitIndicator2digitBottom;
+        let confirmationMessage2digitBottom;
+        // Run Top
+        let pageRunTop;
+        let numberInputRunTop;
+        let priceInputRunTop;
+        let btnAddRunTop;
+        let btnLimitRunTop;
+        let btnExportRunTop;
+        let tableBodyRunTop;
+        let tableFooterRunTop;
+        let limitIndicatorRunTop;
+        let confirmationMessageRunTop;
+         // Run Bottom
+        let pageRunBottom;
+        let numberInputRunBottom;
+        let priceInputRunBottom;
+        let btnAddRunBottom;
+        let btnLimitRunBottom;
+        let btnExportRunBottom;
+        let tableBodyRunBottom;
+        let tableFooterRunBottom;
+        let limitIndicatorRunBottom;
+        let confirmationMessageRunBottom;
+         // Run 2 Top
+        let pageRun2Top;
+        let numberInputRun2Top;
+        let priceInputRun2Top;
+        let btnAddRun2Top;
+        let btnLimitRun2Top;
+        let btnExportRun2Top;
+        let tableBodyRun2Top;
+        let tableFooterRun2Top;
+        let limitIndicatorRun2Top;
+        let confirmationMessageRun2Top;
+         // Pack 4
+        let pagePack4;
+        let numberInputPack4;
+        let priceInputPack4;
+        let btnAddPack4;
+        let btnLimitPack4;
+        let btnExportPack4;
+        let tableBodyPack4;
+        let tableFooterPack4;
+        let limitIndicatorPack4;
+        let confirmationMessagePack4;
+        // Pack 5
+        let pagePack5;
+        let numberInputPack5;
+        let priceInputPack5;
+        let btnAddPack5;
+        let btnLimitPack5;
+        let btnExportPack5;
+        let tableBodyPack5;
+        let tableFooterPack5;
+        let limitIndicatorPack5;
+        let confirmationMessagePack5;
+        // Export Page
+        let pageExport;
+        let exportPage3digit;
+        let exportPage2digitTop;
+        let exportPage2digitBottom;
+        let exportPageRunTop;
+        let exportPageRunBottom;
+        let exportPageRun2Top;
+        let exportPagePack4;
+        let exportPagePack5;
+        let exportAllTablesBtn;
+        // Modals
+        let priceModal;
+        let modalTitle;
+        let modalPrompt;
+        let modalPermutationsContainer;
+        let modalPermutationsList;
+        let checkAllPermsCheckbox;
+        let mainModalPriceContainer;
+        let modalPriceInput;
+        let modalOkBtn;
+        let modalCancelBtn;
+        let editModal;
+        let editModalTitle;
+        let editStraightInput;
+        let editBoxedInput;
+        let editBoxedContainer;
+        let editModalOkBtn;
+        let editModalCancelBtn;
+        // UPDATED: Boxed Modal Elements (Checkbox + Input version)
+        let boxedModal;
+        let boxedModalTitle;
+        let boxedModalStraightCheck; // Checkbox
+        let boxedModalStraightPriceInput; // Input for straight
+        let boxedModalBoxedCheck;     // Checkbox
+        let boxedModalBoxedPriceInput;   // Input for boxed
+        let boxedModalOkBtn;
+        let boxedModalCancelBtn;
+        // Grand Total Summary
+        let grandTotalSummarySection;
+        let userIdDisplay; // Added for user ID display
+        // Close Numbers
+        let closeNumberInput;
+        let btnAddCloseNumber;
+        let btnDeleteAllCloseNumbers;
+        let closeNumbersTableBody;
+        let confirmationMessageCloseNumbers;
+
+        // Close Numbers 2 Digit
+        let closeNumberInput2digit;
+        let btnAddCloseNumber2digit;
+        let btnDeleteAllCloseNumbers2digit;
+        let closeNumbersTableBody2digit;
+        let confirmationMessageCloseNumbers2digit;
+
+        // Generic Modal Elements
+        let genericModal;
+        let genericModalTitle;
+        let genericModalMessage;
+        let genericModalOkBtn;
+        let genericModalCancelBtn;
+
+        // Customer Total Comparison Elements
+        let customerTotalInput;
+        let compareTotalsBtn;
+        let comparisonResultDisplay;
+
+        // Large Amount Confirmation Setting Elements
+        let largeAmountConfirmThresholdInput;
+        let setLargeAmountConfirmThresholdBtn;
+        let largeAmountConfirmThresholdDisplay;
+
+        // NEW: Buy Numbers Page Elements
+        let menuBuyNumbers;
+        let pageBuyNumbers;
+        let customerNameInput;
+        let currentCustomerTotalDisplay;
+        let currentCustomerTotalAmount;
+        let buyPageTypeSelector;
+        let buyNumberInput;
+        let buyPriceInput;
+        let btnBuyStraight;
+        let btnBuyBoxed;
+        let btnBuyReversed;
+        let confirmationMessageBuyNumbers;
+        let currentCustomerSummaryDiv;
+        let currentCustomerNameDisplay;
+        let currentCustomerEntriesList;
+        let btnCloseCustomer;
+        let btnNewCustomer;
+        let buyCustomerCheckTotalInput;
+        let btnBuyCompareCustomerTotal;
+        let buyComparisonResultDisplay;
+        let allCustomersSummaryContainer;
+        let quickAddPriceButtonsContainer; // New: Quick Add Price Buttons Container
+
+
+        // --- Generic Modal Functions ---
+        let genericModalResolve = null;
+        let genericModalInputResolve = null; // New resolve for prompt input
+
+        function showGenericModal(title, message, isConfirm = false) {
+            return new Promise((resolve) => {
+                genericModalResolve = resolve;
+                if (genericModalTitle) genericModalTitle.textContent = title;
+                if (genericModalMessage) {
+                    // Clear previous content and set new message
+                    genericModalMessage.innerHTML = `<p>${message}</p>`;
+                }
+                if (genericModalOkBtn) genericModalOkBtn.textContent = 'ตกลง';
+                if (genericModalCancelBtn) genericModalCancelBtn.classList.add('hidden');
+
+                if (isConfirm) {
+                    if (genericModalOkBtn) genericModalOkBtn.textContent = 'ยืนยัน';
+                    if (genericModalCancelBtn) genericModalCancelBtn.classList.remove('hidden');
+                }
+
+                if (genericModal) genericModal.style.display = 'flex';
+                if (genericModalOkBtn) genericModalOkBtn.focus();
+            });
+        }
+
+        async function customAlert(message, title = 'แจ้งเตือน') {
+            await showGenericModal(title, message, false);
+        }
+
+        async function customConfirm(message, title = 'ยืนยันการดำเนินการ') {
+            return await showGenericModal(title, message, true);
+        }
+
+        // New custom prompt function using the generic modal
+        async function customPrompt(message, initialValue = '', title = 'ป้อนข้อมูล') {
+            return new Promise((resolve) => {
+                genericModalInputResolve = resolve; // Use a separate resolve for input
+                if (genericModalTitle) genericModalTitle.textContent = title;
+                if (genericModalMessage) {
+                    // Set message and add an input field
+                    genericModalMessage.innerHTML = `<p>${message}</p><input type="text" id="genericModalPromptInput" class="modal-input w-full mt-4" value="${initialValue}">`;
+                }
+                if (genericModalOkBtn) genericModalOkBtn.textContent = 'ตกลง';
+                if (genericModalCancelBtn) genericModalCancelBtn.classList.remove('hidden'); // Allow cancel for prompt
+
+                if (genericModal) genericModal.style.display = 'flex';
+                const promptInput = document.getElementById('genericModalPromptInput');
+                if (promptInput) {
+                    promptInput.focus();
+                    promptInput.select(); // Select text for easy editing
+                }
+            });
+        }
+
+        function setupGenericModalListeners() {
+            if (genericModalOkBtn) {
+                genericModalOkBtn.addEventListener('click', () => {
+                    if (genericModalInputResolve) { // If it's a prompt
+                        const promptInput = document.getElementById('genericModalPromptInput');
+                        genericModalInputResolve(promptInput ? promptInput.value : '');
+                        genericModalInputResolve = null;
+                    } else if (genericModalResolve) { // If it's alert/confirm
+                        genericModalResolve(true);
+                        genericModalResolve = null;
+                    }
+                    if (genericModal) genericModal.style.display = 'none';
+                });
+            }
+
+            if (genericModalCancelBtn) {
+                genericModalCancelBtn.addEventListener('click', () => {
+                    if (genericModalInputResolve) { // If it's a prompt
+                        genericModalInputResolve(null); // Return null on cancel
+                        genericModalInputResolve = null;
+                    } else if (genericModalResolve) { // If it's alert/confirm
+                        genericModalResolve(false);
+                        genericModalResolve = null;
+                    }
+                    if (genericModal) genericModal.style.display = 'none';
+                });
+            }
+
+            if (genericModal) {
+                genericModal.addEventListener('click', (e) => {
+                    if (e.target === genericModal) {
+                        if (genericModalInputResolve) {
+                            genericModalInputResolve(null); // Treat background click as cancel for prompt
+                            genericModalInputResolve = null;
+                        } else if (genericModalResolve) {
+                            genericModalResolve(false); // Treat background click as cancel for alert/confirm
+                            genericModalResolve = null;
+                        }
+                        if (genericModal) genericModal.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+
+        // --- Utility Functions ---
+        function getPermutations(numberStr) {
+             if (typeof numberStr !== 'string' || !/^\d+$/.test(numberStr)) return [];
+             const length = numberStr.length;
+             if (length < 2) return [numberStr];
+
+             if (length === 2) {
+                 // For 2 digits, return original and reversed if different
+                 return numberStr[0] === numberStr[1] ? [numberStr] : [numberStr[1] + numberStr[0], numberStr].sort(); // Ensure consistent sort order
+             }
+             if (length === 3) {
+                 const chars = numberStr.split('');
+                 const r = new Set();
+                 function p(a, m = '') {
+                     if (a.length === 0) {
+                         r.add(m);
+                     } else {
+                         for (let i = 0; i < a.length; i++) {
+                             let x = a.slice(), y = x.splice(i, 1);
+                             p(x.slice(), m + y);
+                         }
+                     }
+                 }
+                 p(chars); // Call the permutation function to populate 'r'
+                 return Array.from(r).sort();
+             }
+             // For any other length not explicitly handled (e.g., 4 or 5 digits, though not used for permutations in this app)
+             return [numberStr];
+         }
+
+        function validateNDigitInput(s, n) {
+             if (s === null || s === undefined) return false; // Added null/undefined check for input string
+             if (n === 'RunTop' || n === 'RunBottom') {
+                 return /^\d{1}$/.test(s);
+             }
+             else if (n === 'Pack4') { return /^\d{4}$/.test(s); }
+             else if (n === 'Pack5') { return /^\d{5}$/.test(s); }
+             else if (n === '2digitTop' || n === '2digitBottom' || n === 'Run2Top') {
+                 return /^\d{2}$/.test(s);
+             }
+             else if (n === '3digit') {
+                 return /^\d{3}$/.test(s);
+             }
+             else if (typeof n === 'number' && n > 0) {
+                const regex = new RegExp(`^\\d{${n}}$`);
+                return regex.test(s);
+             }
+             return false;
+         }
+
+        function validatePriceInput(s) {
+             if (s === null || s === undefined) return false;
+             const t = String(s).trim();
+             if (t === '') return false;
+             const n = Number(t);
+             return !isNaN(n) && isFinite(n);
+         }
+
+        function formatPrice(p) {
+             const n = Number(p);
+             return isNaN(n) ? '0.00' : n.toFixed(2);
+         }
+
+        function highlightError(element, add = true) {
+             if(element) { // Add null check
+                if(add) { element.classList.add('input-error'); }
+                else { element.classList.remove('input-error'); }
+             }
+         }
+
+        function isNumberClosed(number) {
+            return closedNumbers.includes(number);
+        }
+
+        function isNumberClosed2digit(number) {
+            return closedNumbers2digit.includes(number);
+        }
+
+        // Helper to get display name for lotto types
+        function getLottoTypeDisplayName(type) {
+            switch (type) {
+                case '3digit': return 'เลข 3 ตัว';
+                case '2digitTop': return '2 ตัวบน';
+                case '2digitBottom': return '2 ตัวล่าง';
+                case 'RunTop': return 'วิ่งบน';
+                case 'RunBottom': return 'วิ่งล่าง';
+                case 'Run2Top': return 'วิ่ง 2 ตัวบน';
+                case 'Pack4': return 'แพ 4 ตัว';
+                case 'Pack5': return 'แพ 5 ตัว';
+                default: return type;
+            }
+        }
+
+        // Helper to get number length for lotto types
+        function getNumberLengthByType(type) {
+            switch (type) {
+                case '3digit': return 3;
+                case '2digitTop': return 2;
+                case '2digitBottom': return 2;
+                case 'RunTop': return 1;
+                case 'RunBottom': return 1;
+                case 'Run2Top': return 2;
+                case 'Pack4': return 4;
+                case 'Pack5': return 5;
+                default: return 0;
+            }
+        }
+
+        // Helper to display confirmation message in various sections
+        const displayConfirmationMessage = (page, message) => {
+            let confirmationMessageDiv;
+            if (page === '3digit') confirmationMessageDiv = confirmationMessage3digit;
+            else if (page === '2digitTop') confirmationMessageDiv = confirmationMessage2digitTop;
+            else if (page === '2digitBottom') confirmationMessageDiv = confirmationMessage2digitBottom;
+            else if (page === 'RunTop') confirmationMessageDiv = confirmationMessageRunTop;
+            else if (page === 'RunBottom') confirmationMessageDiv = confirmationMessageRunBottom;
+            else if (page === 'Run2Top') confirmationMessageDiv = confirmationMessageRun2Top;
+            else if (page === 'Pack4') confirmationMessageDiv = confirmationMessagePack4;
+            else if (page === 'Pack5') confirmationMessageDiv = confirmationMessagePack5;
+            else if (page === 'CloseNumbers') confirmationMessageDiv = confirmationMessageCloseNumbers;
+            else if (page === 'CloseNumbers2digit') confirmationMessageDiv = confirmationMessageCloseNumbers2digit;
+            else if (page === 'BuyNumbers') confirmationMessageDiv = confirmationMessageBuyNumbers;
+
+            if (confirmationMessageDiv) {
+                confirmationMessageDiv.textContent = message;
+                confirmationMessageDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    confirmationMessageDiv.classList.add('hidden');
+                    confirmationMessageDiv.textContent = '';
+                }, 3000);
+            }
+        };
+
+
+        // --- GUI Update Functions ---
+        async function updateTable(type) {
+            let data, tableBody, tableFooter;
+            if (type === '3digit') { data = lottoData3digit; tableBody = tableBody3digit; tableFooter = tableFooter3digit; }
+            else if (type === '2digitTop') { data = lottoData2digitTop; tableBody = tableBody2digitTop; tableFooter = tableFooter2digitTop; }
+            else if (type === '2digitBottom') { data = lottoData2digitBottom; tableBody = tableBody2digitBottom; tableFooter = tableFooter2digitBottom; }
+            else if (type === 'RunTop') { data = lottoDataRunTop; tableBody = tableBodyRunTop; tableFooter = tableFooterRunTop; }
+            else if (type === 'RunBottom') { data = lottoDataRunBottom; tableBody = tableBodyRunBottom; tableFooter = tableFooterRunBottom; }
+            else if (type === 'Run2Top') { data = lottoDataRun2Top; tableBody = tableBodyRun2Top; tableFooter = tableFooterRun2Top; }
+            else if (type === 'Pack4') { data = lottoDataPack4; tableBody = tableBodyPack4; tableFooter = tableFooterPack4; }
+            else if (type === 'Pack5') { data = lottoDataPack5; tableBody = tableBodyPack5; tableFooter = tableFooterPack5; }
+            else { return; }
+
+            // Defensive check: Ensure elements exist before manipulating
+            if (!tableBody || !tableFooter) {
+                console.warn(`updateTable: tableBody or tableFooter not found for type: ${type}. This might happen if the current page is not active.`);
+                return;
+            }
+
+            tableBody.innerHTML = ''; tableFooter.innerHTML = '';
+            let totalStraightDisplaySum = 0, totalBoxedDisplaySum = 0, totalLimitStraightSum = 0, totalLimitBoxedSum = 0, grandTotalOriginalSum = 0;
+            const sortedKeys = Object.keys(data).sort();
+
+            const limitThresholdStraight = Number(limitThresholds[`${type}_straight`]) || 0;
+            const limitThresholdBoxed = (type === '3digit') ? (Number(limitThresholds[`${type}_boxed`]) || 0) : 0;
+
+            sortedKeys.forEach(num => {
+                const itemData = data[num];
+                const straightOriginal = Number(itemData?.straight) || 0;
+                const boxedOriginal = Number(itemData?.boxed) || 0;
+                let straightDisplay = straightOriginal, boxedDisplay = boxedOriginal, limitStraightDisplay = 0, limitBoxedDisplay = 0;
+
+                if (limitThresholdStraight > 0 && straightOriginal > limitThresholdStraight) {
+                    straightDisplay = limitThresholdStraight;
+                    limitStraightDisplay = straightOriginal - limitThresholdStraight;
+                } else { straightDisplay = straightOriginal; limitStraightDisplay = 0; }
+
+                if (type === '3digit') {
+                     if (limitThresholdBoxed > 0 && boxedOriginal > limitThresholdBoxed) {
+                         boxedDisplay = limitThresholdBoxed; limitBoxedDisplay = boxedOriginal - limitThresholdBoxed;
+                     } else { boxedDisplay = boxedOriginal; limitBoxedDisplay = 0; }
+                } else { boxedDisplay = 0; limitBoxedDisplay = 0; }
+
+                const totalOriginal = straightOriginal + boxedOriginal;
+                totalStraightDisplaySum += straightDisplay;
+                if (type === '3digit') totalBoxedDisplaySum += boxedDisplay;
+                totalLimitStraightSum += limitStraightDisplay;
+                if (type === '3digit') totalLimitBoxedSum += limitBoxedDisplay;
+                grandTotalOriginalSum += totalOriginal;
+
+                const r = document.createElement('tr'); r.dataset.number = num;
+                if (type === '3digit') {
+                    r.innerHTML = `
+                        <td class="border-b border-gray-200">${num}</td>
+                        <td class="border-b border-gray-200 text-right">${formatPrice(straightDisplay)}</td>
+                        <td class="border-b border-gray-200 text-right">${formatPrice(boxedDisplay)}</td>
+                        <td class="border-b border-gray-200 text-right text-red-600">${limitStraightDisplay > 0 ? formatPrice(limitStraightDisplay) : '-'}</td>
+                        <td class="border-b border-gray-200 text-right text-pink-600">${limitBoxedDisplay > 0 ? formatPrice(limitBoxedDisplay) : '-'}</td>
+                        <td class="border-b border-gray-200 text-right font-semibold">${formatPrice(totalOriginal)}</td>
+                        <td class="border-b border-gray-200 text-center">
+                            <button class="edit-btn text-blue-500 hover:text-blue-700 text-sm font-semibold mr-2" data-number="${num}" data-type="3digit">แก้ไข</button> <button class="delete-btn text-red-500 hover:text-red-700 text-sm font-semibold" data-number="${num}" data-type="3digit">ลบ</button> </td>`;
+                } else {
+                    r.innerHTML = `
+                        <td class="border-b border-gray-200">${num}</td>
+                        <td class="border-b border-gray-200 text-right">${formatPrice(straightDisplay)}</td>
+                        <td class="border-b border-gray-200 text-right text-red-600">${limitStraightDisplay > 0 ? formatPrice(limitStraightDisplay) : '-'}</td>
+                        <td class="border-b border-gray-200 text-right font-semibold">${formatPrice(totalOriginal)}</td>
+                        <td class="border-b border-gray-200 text-center">
+                            <button class="edit-btn text-blue-500 hover:text-blue-700 text-sm font-semibold mr-2" data-number="${num}" data-type="${type}">แก้ไข</button> <button class="delete-btn text-red-500 hover:text-red-700 text-sm font-semibold" data-number="${num}" data-type="${type}">ลบ</button> </td>`;
+                }
+                tableBody.appendChild(r);
+            });
+
+            const footerRow = document.createElement('tr');
+            if (type === '3digit') {
+                footerRow.innerHTML = `
+                    <td class="text-right font-bold">ยอดรวม:</td>
+                    <td class="text-right font-bold">${formatPrice(totalStraightDisplaySum)}</td>
+                    <td class="text-right font-bold">${formatPrice(totalBoxedDisplaySum)}</td>
+                    <td class="text-right font-bold text-red-600">${formatPrice(totalLimitStraightSum)}</td>
+                    <td class="text-right font-bold text-pink-600">${formatPrice(totalLimitBoxedSum)}</td>
+                    <td class="text-right font-bold">${formatPrice(grandTotalOriginalSum)}</td>
+                    <td></td> `;
+            } else {
+                footerRow.innerHTML = `
+                    <td class="text-right font-bold">ยอดรวม:</td>
+                    <td class="text-right font-bold">${formatPrice(totalStraightDisplaySum)}</td>
+                    <td class="text-right font-bold text-red-600">${formatPrice(totalLimitStraightSum)}</td>
+                    <td class="text-right font-bold">${formatPrice(grandTotalOriginalSum)}</td>
+                    <td></td> `;
+            }
+            tableFooter.appendChild(footerRow);
+            await saveData(type, data);
+        }
+
+        function updateGrandTotalSummary() {
+            // Defensive check: Ensure element exists
+            if (!grandTotalSummarySection) {
+                console.warn("updateGrandTotalSummary: grandTotalSummarySection not found.");
+                return;
+            }
+
+            let calculatedGrandTotal = 0; // Use a local variable first
+            const allDataObjects = [lottoData3digit, lottoData2digitTop, lottoData2digitBottom, lottoDataRunTop, lottoDataRunBottom, lottoDataRun2Top, lottoDataPack4, lottoDataPack5];
+
+            allDataObjects.forEach(dataObject => {
+                Object.values(dataObject).forEach(item => {
+                    const straightOriginal = Number(item?.straight) || 0;
+                    const boxedOriginal = Number(item?.boxed) || 0;
+                    calculatedGrandTotal += (straightOriginal + boxedOriginal);
+                });
+            });
+
+            currentGrandTotal = calculatedGrandTotal; // Update the global variable
+            grandTotalSummarySection.querySelector('span:first-child').textContent = `ยอดรวมทุกรายการ (ตั้งต้น): ${formatPrice(currentGrandTotal)}`;
+        }
+
+        function updateLimitIndicator(type) {
+            const indicatorDiv = document.getElementById(`limitIndicator${type}`);
+            if (!indicatorDiv) return;
+
+            let thresholdStraight = 0;
+            let thresholdBoxed = 0;
+
+            if (type === '3digit') {
+                thresholdStraight = Number(limitThresholds[`${type}_straight`]) || 0;
+                thresholdBoxed = Number(limitThresholds[`${type}_boxed`]) || 0;
+            } else {
+                thresholdStraight = Number(limitThresholds[`${type}_straight`]) || 0;
+            }
+
+            indicatorDiv.innerHTML = '';
+
+            let indicatorText = '';
+            if (type === '3digit') {
+                if (thresholdStraight > 0 && thresholdBoxed > 0 && thresholdStraight === thresholdBoxed) {
+                    indicatorText = `อั้น: ${formatPrice(thresholdStraight)} บาท`;
+                } else {
+                    if (thresholdStraight > 0) indicatorText += `อั้น(ตรง): ${formatPrice(thresholdStraight)} `;
+                    if (thresholdBoxed > 0) indicatorText += `อั้น(โต๊ด): ${formatPrice(thresholdBoxed)}`;
+                }
+            } else {
+                if (thresholdStraight > 0) {
+                    indicatorText = `อั้น: ${formatPrice(thresholdStraight)} บาท`;
+                }
+            }
+
+
+            if (indicatorText) {
+                indicatorDiv.textContent = indicatorText.trim();
+                const clearBtn = document.createElement('span');
+                clearBtn.textContent = 'ลบ';
+                clearBtn.className = 'clear-limit-btn';
+                clearBtn.dataset.type = type;
+                clearBtn.onclick = async () => await clearLimit(type); // Make async
+                indicatorDiv.appendChild(clearBtn);
+                indicatorDiv.classList.remove('hidden');
+            } else {
+                indicatorDiv.classList.add('hidden');
+            }
+        }
+
+        async function clearLimit(type) {
+             console.log(`Clearing limit for type: ${type}`);
+             if (type === '3digit') {
+                 limitThresholds[`${type}_straight`] = 0;
+                 limitThresholds[`${type}_boxed`] = 0;
+             } else {
+                 limitThresholds[`${type}_straight`] = 0;
+             }
+             await saveUserDataObject('limitThresholds', limitThresholds);
+             updateLimitIndicator(type);
+             await updateTable(type);
+             await customAlert('ลบราคาอั้นเรียบร้อยแล้ว'); // Use custom alert
+         }
+
+        async function updateCloseNumbersTable() {
+            if (!closeNumbersTableBody) {
+                console.warn("updateCloseNumbersTable: closeNumbersTableBody not found.");
+                return;
+            }
+            closeNumbersTableBody.innerHTML = '';
+            closedNumbers.forEach((number, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="border-b border-gray-200">${number}</td>
+                    <td class="border-b border-gray-200 text-center">
+                        <button class="edit-close-number-btn text-blue-500 hover:text-blue-700 text-sm font-semibold mr-2" data-index="${index}">แก้ไข</button>
+                        <button class="delete-close-number-btn text-red-500 hover:text-red-700 text-sm font-semibold" data-index="${index}">ลบ</button>
+                    </td>`;
+                closeNumbersTableBody.appendChild(row);
+            });
+            await saveUserDataObject('closedNumbers', closedNumbers);
+        }
+
+        async function updateCloseNumbersTable2digit() {
+            if (!closeNumbersTableBody2digit) {
+                console.warn("updateCloseNumbersTable2digit: closeNumbersTableBody2digit not found.");
+                return;
+            }
+            closeNumbersTableBody2digit.innerHTML = '';
+            closedNumbers2digit.forEach((number, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="border-b border-gray-200">${number}</td>
+                    <td class="border-b border-gray-200 text-center">
+                        <button class="edit-close-number-btn text-blue-500 hover:text-blue-700 text-sm font-semibold mr-2" data-index="${index}">แก้ไข</button>
+                        <button class="delete-close-number-btn text-red-500 hover:text-red-700 text-sm font-semibold" data-index="${index}">ลบ</button>
+                    </td>`;
+                closeNumbersTableBody2digit.appendChild(row);
+            });
+            await saveUserDataObject('closedNumbers2digit', closedNumbers2digit);
+        }
+
+        function clearAllDataInMemory() {
+            lottoData3digit = {}; lottoData2digitTop = {}; lottoData2digitBottom = {};
+            lottoDataRunTop = {}; lottoDataRunBottom = {}; lottoDataRun2Top = {};
+            lottoDataPack4 = {}; lottoDataPack5 = {}; limitThresholds = {};
+            closedNumbers = [];
+            closedNumbers2digit = [];
+            allCustomerBuyData = {}; // Clear customer buy data as well
+            currentCustomerPendingEntries = []; // Clear current pending entries
+            currentCustomerName = ''; // Clear current customer name
+            console.log("In-memory data cleared.");
+        }
+
+
+        // --- Modal Handling (Price Modal - For Limits & Reversed) ---
+        let currentModalResolve = null; // Shared resolve function for modals
+        let currentModalType = null;
+        let currentModalTargetType = null;
+        function showPriceModal(targetType, type, title, prompt, initialPrice = '', showPerms = false, perms = []) {
+             return new Promise((resolve) => {
+                 currentModalResolve = resolve;
+                 currentModalType = type;
+                 currentModalTargetType = targetType;
+                 if (modalTitle) modalTitle.textContent = title; // Add null check
+                 if (modalPrompt) modalPrompt.textContent = prompt; // Add null check
+
+                 if (mainModalPriceContainer) mainModalPriceContainer.classList.remove('hidden'); // Add null check
+                 if (modalPermutationsContainer) modalPermutationsContainer.classList.add('hidden'); // Add null check
+                 if (modalPermutationsList) modalPermutationsList.innerHTML = ''; // Add null check
+                 highlightError(modalPriceInput, false);
+
+                 if (type === 'reversed') {
+                     if (mainModalPriceContainer) mainModalPriceContainer.classList.add('hidden'); // Add null check
+                     if (modalPermutationsContainer) modalPermutationsContainer.classList.remove('hidden'); // Add null check
+                     perms.forEach(pNum => {
+                         // Check if permutation is closed in the relevant 2-digit closed numbers list
+                         const isClosed = (targetType === '3digit') ? isNumberClosed(pNum) : isNumberClosed2digit(pNum);
+                         const li = document.createElement('li');
+                         li.innerHTML = `
+                             <div class="perm-item">
+                                 <input type="checkbox" value="${pNum}" class="perm-checkbox" ${isClosed ? 'disabled' : 'checked'}>
+                                 <span class="perm-number">${pNum}</span>
+                             </div>
+                             <input type="number" step="any" class="perm-price-input" value="${initialPrice}" placeholder="0.00" ${isClosed ? 'disabled' : ''}>
+                         `;
+                         if (isClosed) {
+                             li.classList.add('closed-perm'); // Add class for styling
+                         }
+                         if (modalPermutationsList) modalPermutationsList.appendChild(li); // Add null check
+                     });
+                     if (checkAllPermsCheckbox) checkAllPermsCheckbox.checked = true; // Add null check
+                     if (checkAllPermsCheckbox && modalPermutationsList) checkAllPermsCheckbox.disabled = modalPermutationsList.querySelectorAll('.perm-checkbox:not(:disabled)').length === 0; // Add null check
+
+                 } else { // 'global_limit'
+                     if (mainModalPriceContainer && modalPriceInput) mainModalPriceContainer.querySelector('label[for="modalPriceInput"]').textContent = 'ราคาอั้นสูงสุด:'; // Add null check
+                     let currentThreshold = 0;
+                     if (targetType === '3digit') {
+                         currentThreshold = Number(limitThresholds[`${targetType}_straight`]) || 0;
+                     } else {
+                         currentThreshold = Number(limitThresholds[`${targetType}_straight`]) || 0;
+                     }
+                     if (modalPriceInput) modalPriceInput.value = currentThreshold; // Add null check
+                 }
+
+                 if (priceModal) priceModal.style.display = 'flex'; // Add null check
+                 if (modalPriceInput) modalPriceInput.focus(); // Add null check
+             });
+         }
+
+        function setupPriceModalListeners() {
+            if (modalOkBtn) {
+                modalOkBtn.addEventListener('click', () => {
+                    if (currentModalResolve) {
+                        if (currentModalType === 'reversed') {
+                            const selectedPerms = [];
+                            if (modalPermutationsList) {
+                                modalPermutationsList.querySelectorAll('.perm-checkbox:checked').forEach(checkbox => {
+                                    const number = checkbox.value;
+                                    const priceInput = checkbox.closest('li').querySelector('.perm-price-input');
+                                    const price = parseFloat(priceInput ? priceInput.value : 0);
+                                    if (!isNaN(price) && price > 0) {
+                                        selectedPerms.push({ number, price });
+                                    }
+                                });
+                            }
+                            currentModalResolve(selectedPerms);
+                        } else if (currentModalType === 'global_limit') {
+                            const price = parseFloat(modalPriceInput ? modalPriceInput.value : 0);
+                            if (isNaN(price) || price < 0) {
+                                customAlert('กรุณาป้อนราคาให้ถูกต้องและไม่ติดลบ');
+                                highlightError(modalPriceInput);
+                                return;
+                            }
+                            currentModalResolve(price);
+                        }
+                        currentModalResolve = null;
+                    }
+                    if (priceModal) priceModal.style.display = 'none';
+                });
+            }
+
+            if (modalCancelBtn) {
+                modalCancelBtn.addEventListener('click', () => {
+                    if (currentModalResolve) {
+                        currentModalResolve(null);
+                        currentModalResolve = null;
+                    }
+                    if (priceModal) priceModal.style.display = 'none';
+                });
+            }
+
+            if (priceModal) {
+                priceModal.addEventListener('click', (e) => {
+                    if (e.target === priceModal) {
+                        if (currentModalResolve) {
+                            currentModalResolve(null);
+                            currentModalResolve = null;
+                        }
+                        if (priceModal) priceModal.style.display = 'none';
+                    }
+                });
+            }
+
+            if (checkAllPermsCheckbox) {
+                checkAllPermsCheckbox.addEventListener('change', (e) => {
+                    if (modalPermutationsList) {
+                        modalPermutationsList.querySelectorAll('.perm-checkbox:not(:disabled)').forEach(checkbox => {
+                            checkbox.checked = e.target.checked;
+                        });
+                    }
+                });
+            }
+        }
+
+
+        // --- Boxed Modal Handling ---
+        let currentBoxedModalResolve = null;
+
+        function showBoxedModal(number, initialPrice) {
+            return new Promise((resolve) => {
+                currentBoxedModalResolve = resolve;
+                if (boxedModalTitle) boxedModalTitle.textContent = `เพิ่ม/แก้ไข เลข ${number} (ตัวโต๊ด)`;
+                if (boxedModalStraightPriceInput) boxedModalStraightPriceInput.value = initialPrice;
+                if (boxedModalBoxedPriceInput) boxedModalBoxedPriceInput.value = initialPrice;
+                if (boxedModalStraightCheck) boxedModalStraightCheck.checked = true;
+                if (boxedModalBoxedCheck) boxedModalBoxedCheck.checked = true;
+
+                if (boxedModal) boxedModal.style.display = 'flex';
+                if (boxedModalStraightPriceInput) boxedModalStraightPriceInput.focus();
+            });
+        }
+
+        function setupBoxedModalListeners() {
+            if (boxedModalOkBtn) {
+                boxedModalOkBtn.addEventListener('click', () => {
+                    if (currentBoxedModalResolve) {
+                        const addStraight = boxedModalStraightCheck ? boxedModalStraightCheck.checked : false;
+                        const straightPrice = addStraight ? parseFloat(boxedModalStraightPriceInput ? boxedModalStraightPriceInput.value : 0) : 0;
+                        const addBoxed = boxedModalBoxedCheck ? boxedModalBoxedCheck.checked : false;
+                        const boxedPrice = addBoxed ? parseFloat(boxedModalBoxedPriceInput ? boxedModalBoxedPriceInput.value : 0) : 0;
+
+                        if (!addStraight && !addBoxed) {
+                            customAlert('กรุณาเลือกอย่างน้อยหนึ่งประเภท (ตัวตรง หรือ ตัวโต๊ด)');
+                            return;
+                        }
+                        if ((addStraight && (isNaN(straightPrice) || straightPrice <= 0)) || (addBoxed && (isNaN(boxedPrice) || boxedPrice <= 0))) {
+                             customAlert('กรุณาป้อนราคาให้ถูกต้องและมากกว่า 0');
+                             if(isNaN(straightPrice) || straightPrice <= 0) highlightError(boxedModalStraightPriceInput);
+                             if(isNaN(boxedPrice) || boxedPrice <= 0) highlightError(boxedModalBoxedPriceInput);
+                             return;
+                        }
+
+                        currentBoxedModalResolve({ addStraight, straightPrice, addBoxed, boxedPrice });
+                        currentBoxedModalResolve = null;
+                    }
+                    if (boxedModal) boxedModal.style.display = 'none';
+                });
+            }
+
+            if (boxedModalCancelBtn) {
+                boxedModalCancelBtn.addEventListener('click', () => {
+                    if (currentBoxedModalResolve) {
+                        currentBoxedModalResolve(null);
+                        currentBoxedModalResolve = null;
+                    }
+                    if (boxedModal) boxedModal.style.display = 'none';
+                });
+            }
+
+            if (boxedModal) {
+                boxedModal.addEventListener('click', (e) => {
+                    if (e.target === boxedModal) {
+                        if (currentBoxedModalResolve) {
+                            currentBoxedModalResolve(null);
+                            currentBoxedModalResolve = null;
+                        }
+                        if (boxedModal) boxedModal.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        // --- Edit Modal Handling ---
+        let currentEditModalResolve = null;
+        let currentEditNumber = null;
+        let currentEditType = null;
+
+        function showEditModal(number, type, straightPrice, boxedPrice = null) {
+            return new Promise((resolve) => {
+                currentEditModalResolve = resolve;
+                currentEditNumber = number;
+                currentEditType = type;
+
+                if (editModalTitle) editModalTitle.textContent = `แก้ไขข้อมูลเลข ${number}`;
+                if (editStraightInput) {
+                    editStraightInput.value = straightPrice;
+                    highlightError(editStraightInput, false);
+                }
+
+                if (type === '3digit' && editBoxedContainer && editBoxedInput) {
+                    editBoxedContainer.classList.remove('hidden');
+                    editBoxedInput.value = boxedPrice;
+                    highlightError(editBoxedInput, false);
+                } else if (editBoxedContainer) {
+                    editBoxedContainer.classList.add('hidden');
+                }
+
+                if (editModal) editModal.style.display = 'flex';
+            });
+        }
+
+        function setupEditModalListeners() {
+            if (editModalOkBtn) {
+                editModalOkBtn.addEventListener('click', async () => {
+                    if (currentEditModalResolve) {
+                        const newStraight = parseFloat(editStraightInput ? editStraightInput.value : 0);
+                        const newBoxed = (currentEditType === '3digit') ? parseFloat(editBoxedInput ? editBoxedInput.value : 0) : 0;
+
+                        if (isNaN(newStraight) || newStraight < 0 || (currentEditType === '3digit' && (isNaN(newBoxed) || newBoxed < 0))) {
+                            customAlert('กรุณาป้อนราคาให้ถูกต้องและไม่ติดลบ');
+                            if (isNaN(newStraight) || newStraight < 0) highlightError(editStraightInput);
+                            if (currentEditType === '3digit' && (isNaN(newBoxed) || newBoxed < 0)) highlightError(editBoxedInput);
+                            return;
+                        }
+
+                        currentEditModalResolve({ straight: newStraight, boxed: newBoxed });
+                        currentEditModalResolve = null;
+                    }
+                    if (editModal) editModal.style.display = 'none';
+                });
+            }
+
+            if (editModalCancelBtn) {
+                editModalCancelBtn.addEventListener('click', () => {
+                    if (currentEditModalResolve) {
+                        currentEditModalResolve(null);
+                        currentEditModalResolve = null;
+                    }
+                    if (editModal) editModal.style.display = 'none';
+                });
+            }
+
+            if (editModal) {
+                editModal.addEventListener('click', (e) => {
+                    if (e.target === editModal) {
+                        if (currentEditModalResolve) {
+                            currentEditModalResolve(null);
+                            currentEditModalResolve = null;
+                        }
+                        if (editModal) editModal.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+
+        // --- Page Switching ---
+        async function setActiveMenu(menuId) {
+             const menuMapping = {
+                'menuBuyNumbers': 'pageBuyNumbers',
+                'menu3digit': 'page3digit',
+                'menu2digitTop': 'page2digitTop',
+                'menu2digitBottom': 'page2digitBottom',
+                'menuRunTop': 'pageRunTop',
+                'menuRunBottom': 'pageRunBottom',
+                'menuRun2Top': 'pageRun2Top',
+                'menuPack4': 'pagePack4',
+                'menuPack5': 'pagePack5',
+                'menuCloseNumbers': 'pageCloseNumbers',
+                'menuCloseNumbers2digit': 'pageCloseNumbers2digit',
+                'dropdownExportBtn': 'pageExport',
+            };
+            const pageId = menuMapping[menuId];
+            if (!pageId) return;
+
+            allPageContents.forEach(page => page.classList.remove('active'));
+            const pageToShow = document.getElementById(pageId);
+            if(pageToShow) pageToShow.classList.add('active');
+
+
+            menuItems.forEach(item => item.classList.remove('active'));
+            const clickedMenuElement = document.getElementById(menuId);
+            if (clickedMenuElement && clickedMenuElement.classList.contains('menu-item')) {
+                 clickedMenuElement.classList.add('active');
+            }
+
+            if (dropdownMenu) dropdownMenu.classList.add('hidden');
+
+            // Navigation Fix/Update: Await data updates before showing the page content fully
+            const type = pageId.replace('page', '');
+            if (type && type !== 'Export' && type !== 'CloseNumbers' && type !== 'CloseNumbers2digit' && type !== 'BuyNumbers') {
+                await updateTable(type);
+                updateLimitIndicator(type);
+            } else if (type === 'CloseNumbers') {
+                await updateCloseNumbersTable();
+            } else if (type === 'CloseNumbers2digit') {
+                await updateCloseNumbersTable2digit();
+            } else if (type === 'BuyNumbers') {
+                updateCurrentCustomerSummaryDisplay();
+                updateAllCustomersSummaryDisplay();
+                buyNumberInput.maxLength = getNumberLengthByType(currentBuyPageLottoType);
+                buyNumberInput.placeholder = 'X'.repeat(getNumberLengthByType(currentBuyPageLottoType));
+                updateBuyPageActionButtons();
+                 if (buyPageTypeSelector) {
+                    buyPageTypeSelector.querySelectorAll('.buy-type-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.type === currentBuyPageLottoType);
+                        btn.classList.toggle('bg-blue-500', btn.dataset.type === currentBuyPageLottoType);
+                        btn.classList.toggle('text-white', btn.dataset.type === currentBuyPageLottoType);
+                        btn.classList.toggle('bg-gray-300', btn.dataset.type !== currentBuyPageLottoType);
+                        btn.classList.toggle('text-gray-800', btn.dataset.type !== currentBuyPageLottoType);
+                    });
+                }
+            }
+        }
+
+
+        // --- Setup Listeners for Each Lotto Type Page ---
+        function setupAddNumberListeners(type) {
+            const numberInput = document.getElementById(`numberInput${type}`);
+            const priceInput = document.getElementById(`priceInput${type}`);
+            const btnStraight = document.getElementById(`btnStraight${type}`);
+            const btnReversed = document.getElementById(`btnReversed${type}`);
+            const btnBoxed = document.getElementById(`btnBoxed${type}`);
+            const btnAddRun = document.getElementById(`btnAdd${type}`); // For Run and Pack types
+            const btnLimit = document.getElementById(`btnLimit${type}`);
+            const btnExport = document.getElementById(`btnExport${type}`);
+            const btnExportExcess = document.getElementById(`btnExport${type}Excess`);
+
+            const addOrUpdateLottoEntry = async (num, p, buyType) => {
+                if (numberInput) highlightError(numberInput, false);
+                if (priceInput) highlightError(priceInput, false);
+
+                const confirmThreshold = Number(limitThresholds['global_large_amount_confirm']) || 0;
+
+                let lottoDataObject;
+                if (type === '3digit') { lottoDataObject = lottoData3digit; }
+                else if (type === '2digitTop') { lottoDataObject = lottoData2digitTop; }
+                else if (type === '2digitBottom') { lottoDataObject = lottoData2digitBottom; }
+                else if (type === 'RunTop') { lottoDataObject = lottoDataRunTop; }
+                else if (type === 'RunBottom') { lottoDataObject = lottoDataRunBottom; }
+                else if (type === 'Run2Top') { lottoDataObject = lottoDataRun2Top; }
+                else if (type === 'Pack4') { lottoDataObject = lottoDataPack4; }
+                else if (type === 'Pack5') { lottoDataObject = lottoDataPack5; }
+                else {
+                    await customAlert('ไม่รองรับประเภทหวยที่เลือก');
+                    return;
+                }
+
+                if (confirmThreshold > 0 && p >= confirmThreshold) {
+                    const confirmed = await customConfirm(`คุณกำลังจะเพิ่มเลข ${num} ด้วยราคา ${formatPrice(p)} บาท ใช่หรือไม่?`, 'ยืนยันยอดสูง');
+                    if (!confirmed) {
+                        console.log("Large amount entry cancelled by user.");
+                        return;
+                    }
+                }
+
+                if (!lottoDataObject[num]) {
+                    lottoDataObject[num] = { straight: 0, boxed: 0 };
+                }
+
+                if (buyType === 'straight') {
+                    lottoDataObject[num].straight += p;
+                } else if (buyType === 'boxed' && type === '3digit') {
+                    lottoDataObject[num].boxed += p;
+                } else {
+                    lottoDataObject[num].straight += p;
+                }
+
+                await updateTable(type); // Now async
+                updateGrandTotalSummary();
+                displayConfirmationMessage(type, `เพิ่ม ${num} ราคา ${formatPrice(p)} บาท เรียบร้อยแล้ว`);
+                clearInputs(type);
+            };
+
+            const validationForAdd = () => {
+                const number = numberInput ? numberInput.value.trim() : '';
+                const price = parseFloat(priceInput ? priceInput.value : 0);
+                const numberLength = getNumberLengthByType(type);
+
+                if (!validateNDigitInput(number, numberLength)) {
+                    customAlert(`กรุณาป้อนเลข ${numberLength} หลักให้ถูกต้อง`);
+                    if (numberInput) highlightError(numberInput);
+                    return null;
+                }
+                if (!validatePriceInput(price) || price <= 0) {
+                    customAlert('กรุณาป้อนราคาเป็นตัวเลขที่ถูกต้องและมากกว่า 0');
+                    if (priceInput) highlightError(priceInput);
+                    return null;
+                }
+
+                if (type === '3digit' && isNumberClosed(number)) {
+                    customAlert(`เลข ${number} เป็นเลขปิด ไม่สามารถซื้อได้`);
+                    return null;
+                }
+                if ((type === '2digitTop' || type === '2digitBottom') && isNumberClosed2digit(number)) {
+                    customAlert(`เลข ${number} เป็นเลขปิด (2 หลัก) ไม่สามารถซื้อได้`);
+                    return null;
+                }
+
+                return { number, price };
+            };
+
+
+            if (btnStraight) {
+                btnStraight.addEventListener('click', async () => {
+                    const validationResult = validationForAdd();
+                    if (!validationResult) return;
+                    await addOrUpdateLottoEntry(validationResult.number, validationResult.price, 'straight');
+                });
+            }
+
+            if (btnReversed) {
+                btnReversed.addEventListener('click', async () => {
+                    const validationResult = validationForAdd();
+                    if (!validationResult) return;
+                    const { number: n, price: p } = validationResult;
+                    const perms = getPermutations(n);
+                    const results = await showPriceModal(type, 'reversed', 'ราคาตัวกลับ', `เลือกเลขและแก้ไขราคา:`, p, true, perms);
+
+                    if (results !== null && Array.isArray(results)) {
+                        let totalBatchPrice = 0;
+                        results.forEach(item => totalBatchPrice += item.price);
+
+                        const confirmThreshold = Number(limitThresholds['global_large_amount_confirm']) || 0;
+                        if (confirmThreshold > 0 && totalBatchPrice >= confirmThreshold && p < confirmThreshold) {
+                            const confirmed = await customConfirm(`คุณกำลังจะเพิ่มเลขกลับรวม ${results.length} รายการ ด้วยยอดรวม ${formatPrice(totalBatchPrice)} บาท ใช่หรือไม่?`, 'ยืนยันยอดสูง');
+                            if (!confirmed) return;
+                        }
+
+                        for (const item of results) {
+                            const isPermutationClosed = (type === '3digit') ? isNumberClosed(item.number) : isNumberClosed2digit(item.number);
+                            if (isPermutationClosed) {
+                                await customAlert(`เลขกลับ ${item.number} เป็นเลขปิด ไม่สามารถเพิ่มได้`);
+                                continue;
+                            }
+                            await addOrUpdateLottoEntry(item.number, item.price, 'straight');
+                        }
+                        displayConfirmationMessage(type, `เพิ่มเลขกลับ ${results.length} รายการ ยอดรวม ${formatPrice(totalBatchPrice)} บาท เรียบร้อยแล้ว`);
+                    }
+                    clearInputs(type);
+                });
+            }
+
+            if (btnBoxed) {
+                btnBoxed.addEventListener('click', async () => {
+                    const validationResult = validationForAdd();
+                    if (!validationResult) return;
+                    const { number: n, price: p } = validationResult;
+                    const result = await showBoxedModal(n, p);
+
+                    if (result !== null) {
+                        let totalBoxedPrice = 0;
+                        if (result.addStraight) totalBoxedPrice += result.straightPrice;
+                        if (result.addBoxed) totalBoxedPrice += result.boxedPrice;
+
+                        const confirmThreshold = Number(limitThresholds['global_large_amount_confirm']) || 0;
+                        if (confirmThreshold > 0 && totalBoxedPrice >= confirmThreshold && p < confirmThreshold) {
+                           const confirmed = await customConfirm(`คุณกำลังจะเพิ่มเลข ${n} (ตัวโต๊ด) ด้วยยอดรวม ${formatPrice(totalBoxedPrice)} บาท ใช่หรือไม่?`, 'ยืนยันยอดสูง');
+                           if (!confirmed) return;
+                        }
+
+                        if (result.addStraight) await addOrUpdateLottoEntry(n, result.straightPrice, 'straight');
+                        if (result.addBoxed) await addOrUpdateLottoEntry(n, result.boxedPrice, 'boxed');
+                        
+                        if (result.addStraight || result.addBoxed) {
+                           displayConfirmationMessage(type, `เพิ่มเลข ${n} (ตัวโต๊ด) ยอดรวม ${formatPrice(totalBoxedPrice)} บาท เรียบร้อยแล้ว`);
+                        }
+                    }
+                    clearInputs(type);
+                });
+            }
+
+            if (btnAddRun) {
+                btnAddRun.addEventListener('click', async () => {
+                    const validationResult = validationForAdd();
+                    if (!validationResult) return;
+                    await addOrUpdateLottoEntry(validationResult.number, validationResult.price, 'straight');
+                });
+            }
+
+
+            if (btnLimit) {
+                 btnLimit.addEventListener('click', async () => {
+                     const result = await showPriceModal(type, 'global_limit', 'ตั้งค่าราคาอั้น', 'ตั้งค่าราคาอั้นสูงสุดสำหรับเลขประเภทนี้:');
+                     if (result !== null) {
+                         if (type === '3digit') {
+                             limitThresholds[`${type}_straight`] = result;
+                             limitThresholds[`${type}_boxed`] = result;
+                         } else {
+                             limitThresholds[`${type}_straight`] = result;
+                         }
+                         await saveUserDataObject('limitThresholds', limitThresholds);
+                         updateLimitIndicator(type);
+                         await updateTable(type);
+                         await customAlert(`ตั้งค่าราคาอั้นสำหรับ ${getLottoTypeDisplayName(type)} เป็น ${formatPrice(result)} บาทเรียบร้อยแล้ว`);
+                     }
+                 });
+             }
+
+            if (type === '3digit' && document.getElementById('btnLimit3digitBoxed')) {
+                document.getElementById('btnLimit3digitBoxed').addEventListener('click', async () => {
+                    const result = await showPriceModal(type, 'global_limit', 'ตั้งค่าราคาอั้น (โต๊ด)', 'ตั้งค่าราคาอั้นสูงสุดสำหรับเลขโต๊ด:');
+                    if (result !== null) {
+                        limitThresholds[`${type}_boxed`] = result;
+                        await saveUserDataObject('limitThresholds', limitThresholds);
+                        updateLimitIndicator(type);
+                        await updateTable(type);
+                        await customAlert(`ตั้งค่าราคาอั้น (โต๊ด) สำหรับ 3 ตัว เป็น ${formatPrice(result)} บาทเรียบร้อยแล้ว`);
+                    }
+                });
+            }
+
+            if (btnExport) {
+                btnExport.addEventListener('click', () => exportTableToExcel(type));
+            }
+             if (btnExportExcess && type === '2digitTop') {
+                btnExportExcess.addEventListener('click', () => exportExcessTableToExcel(type));
+            }
+
+            if (numberInput) {
+                numberInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        if (priceInput) priceInput.focus();
+                    }
+                });
+            }
+            if (priceInput) {
+                priceInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        if (btnStraight) btnStraight.click();
+                        else if (btnAddRun) btnAddRun.click();
+                    }
+                });
+            }
+        }
+
+        function clearInputs(type) {
+            const numberInput = document.getElementById(`numberInput${type}`);
+            const priceInput = document.getElementById(`priceInput${type}`);
+            if (numberInput) {
+                numberInput.value = '';
+                highlightError(numberInput, false);
+            }
+            if (priceInput) {
+                priceInput.value = '';
+                highlightError(priceInput, false);
+            }
+            if (numberInput) numberInput.focus();
+        }
+
+        function setupEditDeleteListeners(type) {
+            const tableBody = document.getElementById(`lottoTableBody${type}`);
+            if (tableBody) {
+                tableBody.addEventListener('click', async (e) => {
+                    const target = e.target;
+                    const number = target.dataset.number;
+                    if (!number) return;
+
+                    let lottoDataObject;
+                    if (type === '3digit') lottoDataObject = lottoData3digit;
+                    else if (type === '2digitTop') lottoDataObject = lottoData2digitTop;
+                    else if (type === '2digitBottom') lottoDataObject = lottoData2digitBottom;
+                    else if (type === 'RunTop') lottoDataObject = lottoDataRunTop;
+                    else if (type === 'RunBottom') lottoDataObject = lottoDataRunBottom;
+                    else if (type === 'Run2Top') lottoDataObject = lottoDataRun2Top;
+                    else if (type === 'Pack4') lottoDataObject = lottoDataPack4;
+                    else if (type === 'Pack5') lottoDataObject = lottoDataPack5;
+                    else return;
+
+                    if (target.classList.contains('edit-btn')) {
+                        const itemData = lottoDataObject[number];
+                        if (!itemData) return;
+
+                        const result = await showEditModal(number, type, itemData.straight, itemData.boxed);
+                        if (result !== null) {
+                            lottoDataObject[number].straight = result.straight;
+                            lottoDataObject[number].boxed = result.boxed;
+                            await updateTable(type);
+                            updateGrandTotalSummary();
+                            await customAlert(`แก้ไขเลข ${number} เรียบร้อยแล้ว`);
+                        }
+                    } else if (target.classList.contains('delete-btn')) {
+                        const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบเลข ${number} ออกจากรายการ ${getLottoTypeDisplayName(type)}?`);
+                        if (confirmed) {
+                            delete lottoDataObject[number];
+                            await updateTable(type);
+                            updateGrandTotalSummary();
+                            await customAlert(`ลบเลข ${number} เรียบร้อยแล้ว`);
+                        }
+                    }
+                });
+            }
+            
+            if (closeNumbersTableBody) {
+                closeNumbersTableBody.addEventListener('click', async (e) => {
+                    const target = e.target;
+                    const index = parseInt(target.dataset.index);
+                    if (isNaN(index)) return;
+
+                    if (target.classList.contains('edit-close-number-btn')) {
+                        const currentNumber = closedNumbers[index];
+                        const newNumber = await customPrompt(`แก้ไขเลขปิด 3 หลัก:`, currentNumber);
+                        if (newNumber !== null && newNumber.trim() !== '') {
+                            if (!validateNDigitInput(newNumber.trim(), 3)) {
+                                await customAlert('กรุณาป้อนเลข 3 หลักให้ถูกต้อง'); return;
+                            }
+                            if (closedNumbers.includes(newNumber.trim()) && newNumber.trim() !== currentNumber) {
+                                await customAlert(`เลข ${newNumber.trim()} ถูกปิดไว้แล้ว`); return;
+                            }
+                            closedNumbers[index] = newNumber.trim();
+                            closedNumbers.sort();
+                            await updateCloseNumbersTable();
+                            await customAlert(`แก้ไขเลขปิดเป็น ${newNumber.trim()} เรียบร้อยแล้ว`);
+                        }
+                    } else if (target.classList.contains('delete-close-number-btn')) {
+                        const numberToDelete = closedNumbers[index];
+                        const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบเลขปิด ${numberToDelete}?`);
+                        if (confirmed) {
+                            closedNumbers.splice(index, 1);
+                            await updateCloseNumbersTable();
+                            await customAlert(`ลบเลขปิด ${numberToDelete} เรียบร้อยแล้ว`);
+                        }
+                    }
+                });
+            }
+
+            if (closeNumbersTableBody2digit) {
+                closeNumbersTableBody2digit.addEventListener('click', async (e) => {
+                    const target = e.target;
+                    const index = parseInt(target.dataset.index);
+                    if (isNaN(index)) return;
+
+                    if (target.classList.contains('edit-close-number-btn')) {
+                        const currentNumber = closedNumbers2digit[index];
+                        const newNumber = await customPrompt(`แก้ไขเลขปิด 2 หลัก:`, currentNumber);
+                        if (newNumber !== null && newNumber.trim() !== '') {
+                            if (!validateNDigitInput(newNumber.trim(), 2)) {
+                                await customAlert('กรุณาป้อนเลข 2 หลักให้ถูกต้อง'); return;
+                            }
+                            if (closedNumbers2digit.includes(newNumber.trim()) && newNumber.trim() !== currentNumber) {
+                                await customAlert(`เลข ${newNumber.trim()} ถูกปิดไว้แล้ว`); return;
+                            }
+                            closedNumbers2digit[index] = newNumber.trim();
+                            closedNumbers2digit.sort();
+                            await updateCloseNumbersTable2digit();
+                            await customAlert(`แก้ไขเลขปิดเป็น ${newNumber.trim()} เรียบร้อยแล้ว`);
+                        }
+                    } else if (target.classList.contains('delete-close-number-btn')) {
+                        const numberToDelete = closedNumbers2digit[index];
+                        const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบเลขปิด ${numberToDelete}?`);
+                        if (confirmed) {
+                            closedNumbers2digit.splice(index, 1);
+                            await updateCloseNumbersTable2digit();
+                            await customAlert(`ลบเลขปิด ${numberToDelete} เรียบร้อยแล้ว`);
+                        }
+                    }
+                });
+            }
+        }
+
+
+        // --- Export Functions ---
+        function exportTableToExcel(type) {
+            const tableId = `table${type}`;
+            const tableName = getLottoTypeDisplayName(type);
+            const table = document.getElementById(tableId);
+
+            if (!table) {
+                customAlert(`ไม่พบตารางสำหรับ ${tableName}`);
+                return;
+            }
+
+            const headerRow = [];
+            table.querySelectorAll('thead th').forEach(th => {
+                const text = th.textContent.trim();
+                if (text !== 'จัดการ') headerRow.push(text);
+            });
+
+            const rows = [];
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const rowData = [];
+                tr.querySelectorAll('td').forEach((td, index) => {
+                    if (index < tr.querySelectorAll('td').length - 1) {
+                        let cellText = td.textContent.trim().replace(/,/g, '');
+                        if (cellText === '-') cellText = '0';
+                        rowData.push(cellText);
+                    }
+                });
+                rows.push(rowData);
+            });
+
+            const footerRow = [];
+            table.querySelectorAll('tfoot td').forEach(td => {
+                 let cellText = td.textContent.trim().replace(/,/g, '').replace('ยอดรวม:', '').trim();
+                 footerRow.push(cellText);
+            });
+
+            const ws_data = [headerRow, ...rows, footerRow];
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+            const colWidths = ws_data[0].map((_, colIndex) => ({
+                wch: Math.max(...ws_data.map(row => (row[colIndex] ? String(row[colIndex]).length : 0))) + 2
+            }));
+            ws['!cols'] = colWidths;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, tableName);
+            XLSX.writeFile(wb, `${tableName}.xlsx`);
+        }
+
+        function exportExcessTableToExcel(type) {
+            const tableId = `table${type}`;
+            const tableName = getLottoTypeDisplayName(type);
+            const table = document.getElementById(tableId);
+
+            if (!table) {
+                customAlert(`ไม่พบตารางสำหรับ ${tableName}`); return;
+            }
+
+            const headerRow = ['ตัวเลข', 'ราคาเกิน'];
+            const rows = [];
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const num = tr.cells[0].textContent.trim();
+                let excessPrice = 0;
+
+                if (type === '3digit') {
+                    const limitStraightText = tr.cells[3].textContent.trim();
+                    const limitBoxedText = tr.cells[4].textContent.trim();
+                    excessPrice += (limitStraightText === '-') ? 0 : parseFloat(limitStraightText.replace(/,/g, ''));
+                    excessPrice += (limitBoxedText === '-') ? 0 : parseFloat(limitBoxedText.replace(/,/g, ''));
+                } else {
+                    const limitStraightText = tr.cells[2].textContent.trim();
+                    excessPrice = (limitStraightText === '-') ? 0 : parseFloat(limitStraightText.replace(/,/g, ''));
+                }
+
+                if (excessPrice > 0) {
+                    rows.push([num, formatPrice(excessPrice)]);
+                }
+            });
+
+            if (rows.length === 0) {
+                customAlert(`ไม่มีเลขเกินสำหรับ ${tableName} ที่จะ Export`); return;
+            }
+
+            const ws_data = [headerRow, ...rows];
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+            const colWidths = ws_data[0].map((_, colIndex) => ({
+                wch: Math.max(...ws_data.map(row => (row[colIndex] ? String(row[colIndex]).length : 0))) + 2
+            }));
+            ws['!cols'] = colWidths;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `${tableName}_เกิน`);
+            XLSX.writeFile(wb, `${tableName}_เลขเกิน.xlsx`);
+        }
+
+
+        async function exportAllTablesToExcel() {
+            const wb = XLSX.utils.book_new();
+            const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
+
+            for (const type of allTypes) {
+                const tableId = `table${type}`;
+                const tableName = getLottoTypeDisplayName(type);
+                const table = document.getElementById(tableId);
+
+                if (table) {
+                    const headerRow = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim()).slice(0, -1);
+                    const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr => Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim()).slice(0, -1));
+                    const footerRow = Array.from(table.querySelectorAll('tfoot td')).map(td => td.textContent.trim());
+
+                    const ws_data = [headerRow, ...rows, footerRow];
+                    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+                     const colWidths = ws_data[0].map((_, colIndex) => ({
+                        wch: Math.max(...ws_data.map(row => (row[colIndex] ? String(row[colIndex]).length : 0))) + 2
+                    }));
+                    ws['!cols'] = colWidths;
+
+                    XLSX.utils.book_append_sheet(wb, ws, tableName);
+                }
+            }
+
+            if (wb.SheetNames.length > 0) {
+                XLSX.writeFile(wb, 'สรุปยอดหวยทั้งหมด.xlsx');
+                await customAlert('Export ข้อมูลทั้งหมดเรียบร้อยแล้ว');
+            } else {
+                await customAlert('ไม่มีข้อมูลสำหรับ Export');
+            }
+        }
+
+
+        // --- Setup Listeners for Close Numbers Page ---
+        function setupCloseNumbersListeners() {
+            if (btnAddCloseNumber) {
+                btnAddCloseNumber.addEventListener('click', async () => {
+                    const number = closeNumberInput.value.trim();
+                    if (!validateNDigitInput(number, 3)) {
+                        await customAlert('กรุณาป้อนเลข 3 หลักให้ถูกต้อง');
+                        highlightError(closeNumberInput);
+                        return;
+                    }
+                    if (closedNumbers.includes(number)) {
+                        await customAlert(`เลข ${number} ถูกปิดไว้แล้ว`);
+                        return;
+                    }
+                    closedNumbers.push(number);
+                    closedNumbers.sort();
+                    await updateCloseNumbersTable();
+                    closeNumberInput.value = '';
+                    displayConfirmationMessage('CloseNumbers', `เพิ่มเลขปิด ${number} เรียบร้อยแล้ว`);
+                });
+            }
+
+            if (btnDeleteAllCloseNumbers) {
+                btnDeleteAllCloseNumbers.addEventListener('click', async () => {
+                    const confirmed = await customConfirm('คุณแน่ใจหรือไม่ที่ต้องการลบเลขปิด 3 ตัวทั้งหมด?', 'ยืนยันการลบ');
+                    if (confirmed) {
+                        closedNumbers = [];
+                        await updateCloseNumbersTable();
+                        await customAlert('ลบเลขปิด 3 ตัวทั้งหมดเรียบร้อยแล้ว');
+                    }
+                });
+            }
+        }
+
+        // --- Setup Listeners for Close Numbers 2 Digit Page ---
+        function setupCloseNumbers2digitListeners() {
+            if (btnAddCloseNumber2digit) {
+                btnAddCloseNumber2digit.addEventListener('click', async () => {
+                    const number = closeNumberInput2digit.value.trim();
+                    if (!validateNDigitInput(number, 2)) {
+                        await customAlert('กรุณาป้อนเลข 2 หลักให้ถูกต้อง');
+                        highlightError(closeNumberInput2digit);
+                        return;
+                    }
+                    if (closedNumbers2digit.includes(number)) {
+                        await customAlert(`เลข ${number} (2 หลัก) ถูกปิดไว้แล้ว`);
+                        return;
+                    }
+                    closedNumbers2digit.push(number);
+                    closedNumbers2digit.sort();
+                    await updateCloseNumbersTable2digit();
+                    closeNumberInput2digit.value = '';
+                    displayConfirmationMessage('CloseNumbers2digit', `เพิ่มเลขปิด ${number} (2 หลัก) เรียบร้อยแล้ว`);
+                });
+            }
+
+            if (btnDeleteAllCloseNumbers2digit) {
+                btnDeleteAllCloseNumbers2digit.addEventListener('click', async () => {
+                    const confirmed = await customConfirm('คุณแน่ใจหรือไม่ที่ต้องการลบเลขปิด 2 หลักทั้งหมด?', 'ยืนยันการลบ');
+                    if (confirmed) {
+                        closedNumbers2digit = [];
+                        await updateCloseNumbersTable2digit();
+                        await customAlert('ลบเลขปิด 2 หลักทั้งหมดเรียบร้อยแล้ว');
+                    }
+                });
+            }
+        }
+
+
+        // --- Setup Listeners for Dropdown Menu ---
+        function setupDropdownMenuListeners() {
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', () => {
+                    if (dropdownMenu) dropdownMenu.classList.toggle('hidden');
+                });
+            }
+
+            document.addEventListener('click', (e) => {
+                if (dropdownMenu && !hamburgerBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+
+            if (dropdownExportBtn) {
+                dropdownExportBtn.addEventListener('click', () => setActiveMenu('dropdownExportBtn'));
+            }
+
+            if (dropdownExportLimitedBtn) {
+                dropdownExportLimitedBtn.addEventListener('click', async () => {
+                    const confirmed = await customConfirm('คุณต้องการ Export รายการเลขเกินทั้งหมดใช่หรือไม่?');
+                    if (confirmed) {
+                        const wb = XLSX.utils.book_new();
+                        const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
+                        let hasExcess = false;
+
+                        for (const type of allTypes) {
+                            const tableId = `table${type}`;
+                            const tableName = getLottoTypeDisplayName(type);
+                            const table = document.getElementById(tableId);
+
+                            if (table) {
+                                const headerRow = ['ตัวเลข', 'ราคาเกิน'];
+                                const rows = [];
+
+                                table.querySelectorAll('tbody tr').forEach(tr => {
+                                    const num = tr.cells[0].textContent.trim();
+                                    let excessPrice = 0;
+
+                                    if (type === '3digit') {
+                                        excessPrice += parseFloat(tr.cells[3].textContent.trim().replace(/,/g, '') || 0);
+                                        excessPrice += parseFloat(tr.cells[4].textContent.trim().replace(/,/g, '') || 0);
+                                    } else {
+                                        excessPrice = parseFloat(tr.cells[2].textContent.trim().replace(/,/g, '') || 0);
+                                    }
+
+                                    if (excessPrice > 0) {
+                                        rows.push([num, formatPrice(excessPrice)]);
+                                        hasExcess = true;
+                                    }
+                                });
+
+                                if (rows.length > 0) {
+                                    const ws_data = [headerRow, ...rows];
+                                    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+                                    const colWidths = ws_data[0].map((_, colIndex) => ({
+                                        wch: Math.max(...ws_data.map(row => (row[colIndex] ? String(row[colIndex]).length : 0))) + 2
+                                    }));
+                                    ws['!cols'] = colWidths;
+                                    XLSX.utils.book_append_sheet(wb, ws, `${tableName}_เกิน`);
+                                }
+                            }
+                        }
+
+                        if (hasExcess) {
+                            XLSX.writeFile(wb, 'สรุปเลขเกินทั้งหมด.xlsx');
+                            await customAlert('Export เลขเกินทั้งหมดเรียบร้อยแล้ว');
+                        } else {
+                            await customAlert('ไม่มีเลขเกินสำหรับ Export');
+                        }
+                    }
+                });
+            }
+
+            if (dropdownClearAllBtn) {
+                dropdownClearAllBtn.addEventListener('click', async () => {
+                    const confirmed = await customConfirm('คุณแน่ใจหรือไม่ที่ต้องการลบข้อมูลทั้งหมดในบัญชีนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้!', 'ยืนยันการลบข้อมูล');
+                    if (confirmed) {
+                        clearAllDataInMemory();
+                        if(currentUserId) {
+                             await db.collection('users').doc(currentUserId).delete();
+                        }
+                        await initializeData();
+                        await customAlert('ลบข้อมูลทั้งหมดเรียบร้อยแล้ว');
+                    }
+                });
+            }
+        }
+
+        // --- Setup Listeners for Export Page ---
+        function setupExportPageListeners() {
+            if (exportPage3digit) exportPage3digit.addEventListener('click', () => exportTableToExcel('3digit'));
+            if (exportPage2digitTop) exportPage2digitTop.addEventListener('click', () => exportTableToExcel('2digitTop'));
+            if (exportPage2digitBottom) exportPage2digitBottom.addEventListener('click', () => exportTableToExcel('2digitBottom'));
+            if (exportPageRunTop) exportPageRunTop.addEventListener('click', () => exportTableToExcel('RunTop'));
+            if (exportPageRunBottom) exportPageRunBottom.addEventListener('click', () => exportTableToExcel('RunBottom'));
+            if (exportPageRun2Top) exportPageRun2Top.addEventListener('click', () => exportTableToExcel('Run2Top'));
+            if (exportPagePack4) exportPagePack4.addEventListener('click', () => exportTableToExcel('Pack4'));
+            if (exportPagePack5) exportPagePack5.addEventListener('click', () => exportTableToExcel('Pack5'));
+            if (exportAllTablesBtn) exportAllTablesBtn.addEventListener('click', exportAllTablesToExcel);
+
+            if (compareTotalsBtn) {
+                compareTotalsBtn.addEventListener('click', () => {
+                    const enteredTotal = parseFloat(customerTotalInput ? customerTotalInput.value : 0);
+                    if (isNaN(enteredTotal)) {
+                        customAlert('กรุณาป้อนยอดรวมที่ลูกค้าแจ้งเป็นตัวเลข'); return;
+                    }
+
+                    if (comparisonResultDisplay) {
+                        comparisonResultDisplay.classList.remove('hidden');
+                        if (Math.abs(enteredTotal - currentGrandTotal) < 0.01) {
+                            comparisonResultDisplay.className = 'mt-6 comparison-match';
+                            comparisonResultDisplay.textContent = `ยอดตรงกัน! (${formatPrice(currentGrandTotal)} บาท)`;
+                        } else {
+                            comparisonResultDisplay.className = 'mt-6 comparison-mismatch';
+                            comparisonResultDisplay.textContent = `ยอดไม่ตรงกัน! ระบบ: ${formatPrice(currentGrandTotal)} บาท, ลูกค้า: ${formatPrice(enteredTotal)} บาท (ส่วนต่าง: ${formatPrice(enteredTotal - currentGrandTotal)} บาท)`;
+                        }
+                    }
+                });
+            }
+
+            if (setLargeAmountConfirmThresholdBtn) {
+                setLargeAmountConfirmThresholdBtn.addEventListener('click', async () => {
+                    const threshold = parseFloat(largeAmountConfirmThresholdInput ? largeAmountConfirmThresholdInput.value : '');
+                    if (isNaN(threshold) || threshold < 0) {
+                        await customAlert('กรุณาป้อนยอดเงินที่ต้องยืนยันเป็นตัวเลขที่ถูกต้องและไม่ติดลบ'); return;
+                    }
+                    limitThresholds['global_large_amount_confirm'] = threshold;
+                    await saveUserDataObject('limitThresholds', limitThresholds);
+                    updateLargeAmountConfirmThresholdDisplay();
+                    await customAlert(`ตั้งค่ายอดเงินที่ต้องยืนยันเป็น ${formatPrice(threshold)} บาท เรียบร้อยแล้ว`);
+                });
+            }
+            if (largeAmountConfirmThresholdInput) {
+                largeAmountConfirmThresholdInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        if (setLargeAmountConfirmThresholdBtn) setLargeAmountConfirmThresholdBtn.click();
+                    }
+                });
+            }
+             updateLargeAmountConfirmThresholdDisplay();
+        }
+
+        function updateLargeAmountConfirmThresholdDisplay() {
+            if (largeAmountConfirmThresholdDisplay) {
+                const threshold = Number(limitThresholds['global_large_amount_confirm']) || 0;
+                if (threshold > 0) {
+                    largeAmountConfirmThresholdDisplay.textContent = `ปัจจุบัน: ยอดที่ต้องยืนยันคือ ${formatPrice(threshold)} บาทขึ้นไป`;
+                } else {
+                    largeAmountConfirmThresholdDisplay.textContent = 'ยังไม่ได้ตั้งค่ายอดเงินที่ต้องยืนยัน (ปิดใช้งาน)';
+                }
+            }
+        }
+
+        // --- NEW: Buy Numbers Page Functions ---
+        function updateBuyPageActionButtons() {
+            if (!btnBuyStraight || !btnBuyBoxed || !btnBuyReversed || !buyNumberInput) return;
+
+            const currentType = currentBuyPageLottoType;
+            btnBuyStraight.classList.remove('hidden');
+            btnBuyBoxed.classList.add('hidden');
+            btnBuyReversed.classList.add('hidden');
+
+            const numberLength = getNumberLengthByType(currentType);
+            buyNumberInput.maxLength = numberLength;
+            buyNumberInput.placeholder = 'X'.repeat(numberLength || 1);
+
+            if (currentType === '3digit') {
+                btnBuyBoxed.classList.remove('hidden');
+                btnBuyReversed.classList.remove('hidden');
+            } else if (currentType === '2digitTop' || currentType === '2digitBottom' || currentType === 'Run2Top') {
+                btnBuyReversed.classList.remove('hidden');
+            }
+        }
+
+        function updateCurrentCustomerSummaryDisplay() {
+            if (!currentCustomerSummaryDiv || !currentCustomerNameDisplay || !currentCustomerEntriesList || !currentCustomerTotalAmount) return;
+
+            currentCustomerNameDisplay.textContent = currentCustomerName || 'ลูกค้าไม่ระบุชื่อ';
+
+            if (currentCustomerPendingEntries.length > 0) {
+                currentCustomerSummaryDiv.classList.remove('hidden');
+                currentCustomerEntriesList.innerHTML = '';
+                let total = 0;
+                currentCustomerPendingEntries.forEach(entry => {
+                    const li = document.createElement('li');
+                    let buyTypeSuffix = entry.buyType === 'straight' ? ' (<strong>ตัวตรง</strong>)' : entry.buyType === 'boxed' ? ' (<strong>โต๊ด</strong>)' : ' (<strong>กลับ</strong>)';
+                    li.innerHTML = `<span class="font-bold text-lg">[${getLottoTypeDisplayName(entry.type)}]</span> <span class="text-lg">${entry.number} / ${formatPrice(entry.price)}</span>${buyTypeSuffix}`;
+                    currentCustomerEntriesList.appendChild(li);
+                    total += entry.price;
+                });
+                currentCustomerTotalAmount.textContent = formatPrice(total);
+            } else {
+                currentCustomerSummaryDiv.classList.add('hidden');
+                currentCustomerNameDisplay.textContent = '';
+                currentCustomerEntriesList.innerHTML = '';
+                currentCustomerTotalAmount.textContent = formatPrice(0);
+            }
+        }
+
+        async function updateAllCustomersSummaryDisplay() {
+            if (!allCustomersSummaryContainer) return;
+
+            allCustomersSummaryContainer.innerHTML = '';
+            const customerNames = Object.keys(allCustomerBuyData).sort();
+
+            customerNames.forEach(name => {
+                const customerData = allCustomerBuyData[name];
+                const card = document.createElement('div');
+                card.className = 'bg-white p-6 rounded-lg shadow-md border border-gray-200 relative';
+
+                let entriesHtml = customerData.entries.map(entry => {
+                    let buyTypeSuffix = entry.buyType === 'straight' ? ' (<strong>ตัวตรง</strong>)' : entry.buyType === 'boxed' ? ' (<strong>โต๊ด</strong>)' : ' (<strong>กลับ</strong>)';
+                    return `<li><span class="font-bold">[${getLottoTypeDisplayName(entry.type)}]</span> ${entry.number} / ${formatPrice(entry.price)}${buyTypeSuffix}</li>`;
+                }).join('');
+
+                let comparisonHtml = '';
+                if (customerData.customerCheckTotal !== null && customerData.customerCheckTotal !== undefined) {
+                    if (Math.abs(customerData.total - customerData.customerCheckTotal) < 0.01) {
+                        comparisonHtml = `<span class="text-green-600">ยอดตรงกัน!</span>`;
+                    } else {
+                        comparisonHtml = `<span class="text-red-600">ยอดไม่ตรงกัน! (ส่วนต่าง: ${formatPrice(customerData.total - customerData.customerCheckTotal)} บาท)</span>`;
+                    }
+                }
+
+                card.innerHTML = `
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${name || 'ลูกค้าไม่ระบุชื่อ'}</h3>
+                    <ul class="text-sm text-gray-600 mb-3 max-h-24 overflow-y-auto border-b pb-2">${entriesHtml}</ul>
+                    <div class="flex justify-between items-center text-md font-semibold text-gray-700"><span>ยอดรวม:</span><span>${formatPrice(customerData.total)} บาท</span></div>
+                    <div class="flex justify-between items-center text-sm text-gray-500 mt-1"><span>ยอดลูกค้าแจ้ง:</span><span>${customerData.customerCheckTotal ? formatPrice(customerData.customerCheckTotal) + ' บาท' : 'ไม่ได้ระบุ'}</span></div>
+                    <div class="mt-3 text-center text-sm font-semibold">${comparisonHtml}</div>
+                    <div class="absolute top-3 right-3 flex gap-2">
+                        <button class="text-blue-500 hover:text-blue-700 text-sm edit-customer-summary-btn" data-customer-name="${name}">แก้ไข</button>
+                        <button class="text-red-500 hover:text-red-700 text-sm delete-customer-summary-btn" data-customer-name="${name}">ลบ</button>
+                    </div>`;
+                allCustomersSummaryContainer.appendChild(card);
+            });
+
+            allCustomersSummaryContainer.querySelectorAll('.delete-customer-summary-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const nameToDelete = e.target.dataset.customerName;
+                    const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบสรุปยอดของ "${nameToDelete || 'ลูกค้าไม่ระบุชื่อ'}"? (ข้อมูลเลขที่คีย์ไปแล้วจะไม่ถูกลบ)`, 'ยืนยันการลบ');
+                    if (confirmed) {
+                        delete allCustomerBuyData[nameToDelete];
+                        await saveUserDataObject('allCustomerBuyData', allCustomerBuyData);
+                        await updateAllCustomersSummaryDisplay();
+                        await customAlert(`ลบสรุปยอดของ "${nameToDelete || 'ลูกค้าไม่ระบุชื่อ'}" เรียบร้อยแล้ว`);
+                    }
+                });
+            });
+
+            allCustomersSummaryContainer.querySelectorAll('.edit-customer-summary-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const nameToEdit = e.target.dataset.customerName;
+                    const customerData = allCustomerBuyData[nameToEdit];
+                    if (customerData) {
+                        currentCustomerName = nameToEdit;
+                        currentCustomerPendingEntries = [...customerData.entries];
+                        if (customerNameInput) customerNameInput.value = nameToEdit;
+                        if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = customerData.customerCheckTotal || '';
+                        updateCurrentCustomerSummaryDisplay();
+                        await setActiveMenu('menuBuyNumbers');
+                        await customAlert(`โหลดรายการของ "${nameToEdit}" เพื่อแก้ไขแล้ว`);
+                    }
+                });
+            });
+        }
+
+
+        function setupBuyNumbersPageListeners() {
+            if (customerNameInput) {
+                customerNameInput.addEventListener('input', () => {
+                    currentCustomerName = customerNameInput.value.trim();
+                    updateCurrentCustomerSummaryDisplay();
+                });
+            }
+
+            if (buyPageTypeSelector) {
+                buyPageTypeSelector.addEventListener('click', (e) => {
+                    const target = e.target.closest('.buy-type-btn');
+                    if (target) {
+                        currentBuyPageLottoType = target.dataset.type;
+                        setActiveMenu('menuBuyNumbers'); // Re-run to update UI correctly
+                        if (buyNumberInput) {
+                            buyNumberInput.value = '';
+                            highlightError(buyNumberInput, false);
+                            buyNumberInput.focus();
+                        }
+                        if (buyPriceInput) buyPriceInput.value = '';
+                    }
+                });
+            }
+
+            const addEntryToPendingList = async (num, p, buyType, type) => {
+                const confirmThreshold = Number(limitThresholds['global_large_amount_confirm']) || 0;
+                if (confirmThreshold > 0 && p >= confirmThreshold) {
+                    const confirmed = await customConfirm(`คุณกำลังจะเพิ่มเลข ${num} (${getLottoTypeDisplayName(type)}) ด้วยราคา ${formatPrice(p)} บาท ใช่หรือไม่?`, 'ยืนยันยอดสูง');
+                    if (!confirmed) return false;
+                }
+
+                if (type === '3digit' && isNumberClosed(num)) { await customAlert(`เลข ${num} เป็นเลขปิด ไม่สามารถซื้อได้`); return false; }
+                if ((type === '2digitTop' || type === '2digitBottom') && isNumberClosed2digit(num)) { await customAlert(`เลข ${num} เป็นเลขปิด (2 หลัก) ไม่สามารถซื้อได้`); return false; }
+
+                currentCustomerPendingEntries.push({ type, number: num, price: p, buyType });
+                updateCurrentCustomerSummaryDisplay();
+                displayConfirmationMessage('BuyNumbers', `เพิ่ม ${num} (${getLottoTypeDisplayName(type)}) ราคา ${formatPrice(p)} บาท เรียบร้อยแล้ว`);
+                if (buyNumberInput) { buyNumberInput.value = ''; highlightError(buyNumberInput, false); buyNumberInput.focus(); }
+                if (buyPriceInput) { buyPriceInput.value = ''; highlightError(buyPriceInput, false); }
+                return true;
+            };
+
+            const validateBuyInput = () => {
+                const number = buyNumberInput ? buyNumberInput.value.trim() : '';
+                const price = parseFloat(buyPriceInput ? buyPriceInput.value : 0);
+                const numberLength = getNumberLengthByType(currentBuyPageLottoType);
+
+                if (!validateNDigitInput(number, numberLength)) {
+                    customAlert(`กรุณาป้อนเลข ${numberLength} หลักให้ถูกต้อง`);
+                    if (buyNumberInput) highlightError(buyNumberInput);
+                    return null;
+                }
+                if (!validatePriceInput(price) || price <= 0) {
+                    customAlert('กรุณาป้อนราคาเป็นตัวเลขที่ถูกต้องและมากกว่า 0');
+                    if (buyPriceInput) highlightError(buyPriceInput);
+                    return null;
+                }
+                return { number, price };
+            };
+
+            if (btnBuyStraight) {
+                btnBuyStraight.addEventListener('click', async () => {
+                    const validationResult = validateBuyInput();
+                    if (validationResult) await addEntryToPendingList(validationResult.number, validationResult.price, 'straight', currentBuyPageLottoType);
+                });
+            }
+
+            if (btnBuyBoxed) {
+                btnBuyBoxed.addEventListener('click', async () => {
+                    const validationResult = validateBuyInput();
+                    if (!validationResult) return;
+                    const { number: n, price: p } = validationResult;
+                    const result = await showBoxedModal(n, p);
+                    if (result) {
+                        if (result.addStraight) await addEntryToPendingList(n, result.straightPrice, 'straight', currentBuyPageLottoType);
+                        if (result.addBoxed) await addEntryToPendingList(n, result.boxedPrice, 'boxed', currentBuyPageLottoType);
+                    }
+                });
+            }
+
+            if (btnBuyReversed) {
+                btnBuyReversed.addEventListener('click', async () => {
+                    const validationResult = validateBuyInput();
+                    if (!validationResult) return;
+                    const { number: n, price: p } = validationResult;
+                    const perms = getPermutations(n);
+                    const results = await showPriceModal(currentBuyPageLottoType, 'reversed', 'ราคาตัวกลับ', `เลือกเลขและแก้ไขราคา:`, p, true, perms);
+                    if (results) {
+                        for (const item of results) {
+                            await addEntryToPendingList(item.number, item.price, 'reversed', currentBuyPageLottoType);
+                        }
+                    }
+                });
+            }
+
+
+            if (btnCloseCustomer) {
+                btnCloseCustomer.addEventListener('click', async () => {
+                    if (currentCustomerPendingEntries.length === 0) {
+                        await customAlert('ไม่มีรายการสำหรับลูกค้าคนนี้ที่จะปิดยอด'); return;
+                    }
+
+                    let totalCurrentCustomerPurchase = currentCustomerPendingEntries.reduce((sum, entry) => sum + entry.price, 0);
+                    const customerCheckTotal = parseFloat(buyCustomerCheckTotalInput ? buyCustomerCheckTotalInput.value : null);
+                    const customerName = currentCustomerName || `ลูกค้า ${Object.keys(allCustomerBuyData).length + 1}`;
+
+                    const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่จะปิดยอดสำหรับ "${customerName}"? ยอดรวม: ${formatPrice(totalCurrentCustomerPurchase)} บาท`);
+                    if (!confirmed) return;
+
+                    for (const entry of currentCustomerPendingEntries) {
+                        let lottoDataObject;
+                        if (entry.type === '3digit') lottoDataObject = lottoData3digit; else if (entry.type === '2digitTop') lottoDataObject = lottoData2digitTop; else if (entry.type === '2digitBottom') lottoDataObject = lottoData2digitBottom; else if (entry.type === 'RunTop') lottoDataObject = lottoDataRunTop; else if (entry.type === 'RunBottom') lottoDataObject = lottoDataRunBottom; else if (entry.type === 'Run2Top') lottoDataObject = lottoDataRun2Top; else if (entry.type === 'Pack4') lottoDataObject = lottoDataPack4; else if (entry.type === 'Pack5') lottoDataObject = lottoDataPack5;
+
+                        if (!lottoDataObject[entry.number]) lottoDataObject[entry.number] = { straight: 0, boxed: 0 };
+                        if (entry.buyType === 'boxed' && entry.type === '3digit') {
+                             lottoDataObject[entry.number].boxed += entry.price;
+                        } else {
+                             lottoDataObject[entry.number].straight += entry.price;
+                        }
+                        await saveData(entry.type, lottoDataObject);
+                    }
+                    
+                    allCustomerBuyData[customerName] = { entries: [...currentCustomerPendingEntries], total: totalCurrentCustomerPurchase, customerCheckTotal: isNaN(customerCheckTotal) ? null : customerCheckTotal };
+                    await saveUserDataObject('allCustomerBuyData', allCustomerBuyData);
+
+                    currentCustomerPendingEntries = [];
+                    if (customerNameInput) customerNameInput.value = '';
+                    currentCustomerName = '';
+                    if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = '';
+                    updateCurrentCustomerSummaryDisplay();
+                    await updateAllCustomersSummaryDisplay();
+                    updateGrandTotalSummary();
+                    await customAlert(`ปิดยอดสำหรับ "${customerName}" เรียบร้อยแล้ว!`);
+                });
+            }
+
+            if (btnNewCustomer) {
+                btnNewCustomer.addEventListener('click', async () => {
+                    if (currentCustomerPendingEntries.length > 0) {
+                        const confirmed = await customConfirm('คุณแน่ใจหรือไม่ที่จะเริ่มลูกค้าใหม่? รายการที่ยังไม่ได้ปิดยอดจะถูกล้าง', 'ยืนยัน');
+                        if (!confirmed) return;
+                    }
+                    currentCustomerPendingEntries = [];
+                    if (customerNameInput) customerNameInput.value = '';
+                    currentCustomerName = '';
+                    if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = '';
+                    updateCurrentCustomerSummaryDisplay();
+                    displayConfirmationMessage('BuyNumbers', 'เริ่มลูกค้าใหม่แล้ว');
+                });
+            }
+
+            if (btnBuyCompareCustomerTotal) {
+                btnBuyCompareCustomerTotal.addEventListener('click', () => {
+                    const enteredTotal = parseFloat(buyCustomerCheckTotalInput ? buyCustomerCheckTotalInput.value : 0);
+                    let currentCalculatedTotal = currentCustomerPendingEntries.reduce((sum, entry) => sum + entry.price, 0);
+
+                    if (isNaN(enteredTotal)) { customAlert('กรุณาป้อนยอดรวมที่ลูกค้าแจ้งเป็นตัวเลข'); return; }
+
+                    if (buyComparisonResultDisplay) {
+                        buyComparisonResultDisplay.classList.remove('hidden');
+                        if (Math.abs(enteredTotal - currentCalculatedTotal) < 0.01) {
+                            buyComparisonResultDisplay.className = 'mt-4 p-3 rounded-md text-center comparison-match';
+                            buyComparisonResultDisplay.textContent = `ยอดตรงกัน! (${formatPrice(currentCalculatedTotal)} บาท)`;
+                        } else {
+                            buyComparisonResultDisplay.className = 'mt-4 p-3 rounded-md text-center comparison-mismatch';
+                            buyComparisonResultDisplay.textContent = `ยอดไม่ตรงกัน! ระบบ: ${formatPrice(currentCalculatedTotal)} บาท, ลูกค้า: ${formatPrice(enteredTotal)} บาท (ส่วนต่าง: ${formatPrice(currentCalculatedTotal - enteredTotal)} บาท)`;
+                        }
+                    }
+                });
+            }
+
+            if (quickAddPriceButtonsContainer) {
+                quickAddPriceButtonsContainer.addEventListener('click', (e) => {
+                    const target = e.target.closest('.quick-add-price-btn');
+                    if (target) {
+                        const valueToAdd = parseFloat(target.dataset.value);
+                        let currentPrice = parseFloat(buyPriceInput.value) || 0;
+                        buyPriceInput.value = (currentPrice + valueToAdd).toFixed(2);
+                        highlightError(buyPriceInput, false);
+                    }
+                });
+            }
+
+            if (buyNumberInput) {
+                buyNumberInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); if (buyPriceInput) buyPriceInput.focus(); }
+                });
+            }
+            if (buyPriceInput) {
+                buyPriceInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); if (btnBuyStraight) btnBuyStraight.click(); }
+                });
+            }
+        }
+        
+        // --- Data and App Initialization ---
+        async function initializeData() {
+            // Load all data from Firestore
+            lottoData3digit = await loadData('lottoData3digit');
+            lottoData2digitTop = await loadData('lottoData2digitTop');
+            lottoData2digitBottom = await loadData('lottoData2digitBottom');
+            lottoDataRunTop = await loadData('lottoDataRunTop');
+            lottoDataRunBottom = await loadData('lottoDataRunBottom');
+            lottoDataRun2Top = await loadData('lottoDataRun2Top');
+            lottoDataPack4 = await loadData('lottoDataPack4');
+            lottoDataPack5 = await loadData('lottoDataPack5');
+            
+            limitThresholds = await loadUserDataObject('limitThresholds', {});
+            closedNumbers = await loadUserDataObject('closedNumbers', []);
+            closedNumbers2digit = await loadUserDataObject('closedNumbers2digit', []);
+            allCustomerBuyData = await loadUserDataObject('allCustomerBuyData', {});
+
+            // Update all UI components with the loaded data
+            const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
+            for (const type of allTypes) {
+                await updateTable(type);
+                updateLimitIndicator(type);
+            }
+            
+            updateGrandTotalSummary();
+            await updateCloseNumbersTable();
+            await updateCloseNumbersTable2digit();
+            updateLargeAmountConfirmThresholdDisplay();
+            await updateAllCustomersSummaryDisplay();
+
+            // Set the initial active page (navigation fix)
+            const initialMenuId = 'menuBuyNumbers';
+            await setActiveMenu(initialMenuId);
+        }
+
+        function assignDOMElements() {
+            pageContainer = document.getElementById('pageContainer');
+            allPageContents = document.querySelectorAll('.page-content');
+            menuItems = document.querySelectorAll('.menu-item');
+            hamburgerBtn = document.getElementById('hamburgerBtn');
+            dropdownMenu = document.getElementById('dropdownMenu');
+            dropdownExportBtn = document.getElementById('dropdownExportBtn');
+            dropdownExportLimitedBtn = document.getElementById('dropdownExportLimitedBtn');
+            dropdownClearAllBtn = document.getElementById('dropdownClearAllBtn');
+            page3digit = document.getElementById('page3digit');
+            numberInput3digit = document.getElementById('numberInput3digit');
+            priceInput3digit = document.getElementById('priceInput3digit');
+            btnStraight3digit = document.getElementById('btnStraight3digit');
+            btnReversed3digit = document.getElementById('btnReversed3digit');
+            btnBoxed3digit = document.getElementById('btnBoxed3digit');
+            btnLimit3digit = document.getElementById('btnLimit3digit');
+            btnLimit3digitBoxed = document.getElementById('btnLimit3digitBoxed');
+            btnExport3digit = document.getElementById('btnExport3digit');
+            tableBody3digit = document.getElementById('lottoTableBody3digit');
+            tableFooter3digit = document.getElementById('lottoTableFooter3digit');
+            limitIndicator3digit = document.getElementById('limitIndicator3digit');
+            confirmationMessage3digit = document.getElementById('confirmationMessage3digit');
+            page2digitTop = document.getElementById('page2digitTop');
+            numberInput2digitTop = document.getElementById('numberInput2digitTop');
+            priceInput2digitTop = document.getElementById('priceInput2digitTop');
+            btnStraight2digitTop = document.getElementById('btnStraight2digitTop');
+            btnReversed2digitTop = document.getElementById('btnReversed2digitTop');
+            btnLimit2digitTop = document.getElementById('btnLimit2digitTop');
+            btnExport2digitTop = document.getElementById('btnExport2digitTop');
+            btnExport2digitTopExcess = document.getElementById('btnExport2digitTopExcess');
+            tableBody2digitTop = document.getElementById('lottoTableBody2digitTop');
+            tableFooter2digitTop = document.getElementById('lottoTableFooter2digitTop');
+            limitIndicator2digitTop = document.getElementById('limitIndicator2digitTop');
+            confirmationMessage2digitTop = document.getElementById('confirmationMessage2digitTop');
+            page2digitBottom = document.getElementById('page2digitBottom');
+            numberInput2digitBottom = document.getElementById('numberInput2digitBottom');
+            priceInput2digitBottom = document.getElementById('priceInput2digitBottom');
+            btnStraight2digitBottom = document.getElementById('btnStraight2digitBottom');
+            btnReversed2digitBottom = document.getElementById('btnReversed2digitBottom');
+            btnLimit2digitBottom = document.getElementById('btnLimit2digitBottom');
+            btnExport2digitBottom = document.getElementById('btnExport2digitBottom');
+            tableBody2digitBottom = document.getElementById('lottoTableBody2digitBottom');
+            tableFooter2digitBottom = document.getElementById('lottoTableFooter2digitBottom');
+            limitIndicator2digitBottom = document.getElementById('limitIndicator2digitBottom');
+            confirmationMessage2digitBottom = document.getElementById('confirmationMessage2digitBottom');
+            pageRunTop = document.getElementById('pageRunTop');
+            numberInputRunTop = document.getElementById('numberInputRunTop');
+            priceInputRunTop = document.getElementById('priceInputRunTop');
+            btnAddRunTop = document.getElementById('btnAddRunTop');
+            btnLimitRunTop = document.getElementById('btnLimitRunTop');
+            btnExportRunTop = document.getElementById('btnExportRunTop');
+            tableBodyRunTop = document.getElementById('lottoTableBodyRunTop');
+            tableFooterRunTop = document.getElementById('lottoTableFooterRunTop');
+            limitIndicatorRunTop = document.getElementById('limitIndicatorRunTop');
+            confirmationMessageRunTop = document.getElementById('confirmationMessageRunTop');
+            pageRunBottom = document.getElementById('pageRunBottom');
+            numberInputRunBottom = document.getElementById('numberInputRunBottom');
+            priceInputRunBottom = document.getElementById('priceInputRunBottom');
+            btnAddRunBottom = document.getElementById('btnAddRunBottom');
+            btnLimitRunBottom = document.getElementById('btnLimitRunBottom');
+            btnExportRunBottom = document.getElementById('btnExportRunBottom');
+            tableBodyRunBottom = document.getElementById('lottoTableBodyRunBottom');
+            tableFooterRunBottom = document.getElementById('lottoTableFooterRunBottom');
+            limitIndicatorRunBottom = document.getElementById('limitIndicatorRunBottom');
+            confirmationMessageRunBottom = document.getElementById('confirmationMessageRunBottom');
+            pageRun2Top = document.getElementById('pageRun2Top');
+            numberInputRun2Top = document.getElementById('numberInputRun2Top');
+            priceInputRun2Top = document.getElementById('priceInputRun2Top');
+            btnAddRun2Top = document.getElementById('btnAddRun2Top');
+            btnLimitRun2Top = document.getElementById('btnLimitRun2Top');
+            btnExportRun2Top = document.getElementById('btnExportRun2Top');
+            tableBodyRun2Top = document.getElementById('lottoTableBodyRun2Top');
+            tableFooterRun2Top = document.getElementById('lottoTableFooterRun2Top');
+            limitIndicatorRun2Top = document.getElementById('limitIndicatorRun2Top');
+            confirmationMessageRun2Top = document.getElementById('confirmationMessageRun2Top');
+            pagePack4 = document.getElementById('pagePack4');
+            numberInputPack4 = document.getElementById('numberInputPack4');
+            priceInputPack4 = document.getElementById('priceInputPack4');
+            btnAddPack4 = document.getElementById('btnAddPack4');
+            btnLimitPack4 = document.getElementById('btnLimitPack4');
+            btnExportPack4 = document.getElementById('btnExportPack4');
+            tableBodyPack4 = document.getElementById('lottoTableBodyPack4');
+            tableFooterPack4 = document.getElementById('lottoTableFooterPack4');
+            limitIndicatorPack4 = document.getElementById('limitIndicatorPack4');
+            confirmationMessagePack4 = document.getElementById('confirmationMessagePack4');
+            pagePack5 = document.getElementById('pagePack5');
+            numberInputPack5 = document.getElementById('numberInputPack5');
+            priceInputPack5 = document.getElementById('priceInputPack5');
+            btnAddPack5 = document.getElementById('btnAddPack5');
+            btnLimitPack5 = document.getElementById('btnLimitPack5');
+            btnExportPack5 = document.getElementById('btnExportPack5');
+            tableBodyPack5 = document.getElementById('lottoTableBodyPack5');
+            tableFooterPack5 = document.getElementById('lottoTableFooterPack5');
+            limitIndicatorPack5 = document.getElementById('limitIndicatorPack5');
+            confirmationMessagePack5 = document.getElementById('confirmationMessagePack5');
+            pageExport = document.getElementById('pageExport');
+            exportPage3digit = document.getElementById('exportPage3digit');
+            exportPage2digitTop = document.getElementById('exportPage2digitTop');
+            exportPage2digitBottom = document.getElementById('exportPage2digitBottom');
+            exportPageRunTop = document.getElementById('exportPageRunTop');
+            exportPageRunBottom = document.getElementById('exportPageRunBottom');
+            exportPageRun2Top = document.getElementById('exportPageRun2Top');
+            exportPagePack4 = document.getElementById('exportPagePack4');
+            exportPagePack5 = document.getElementById('exportPagePack5');
+            exportAllTablesBtn = document.getElementById('exportAllTablesBtn');
+            priceModal = document.getElementById('priceModal');
+            modalTitle = document.getElementById('modalTitle');
+            modalPrompt = document.getElementById('modalPrompt');
+            modalPermutationsContainer = document.getElementById('modalPermutationsContainer');
+            modalPermutationsList = document.getElementById('modalPermutationsList');
+            checkAllPermsCheckbox = document.getElementById('checkAllPerms');
+            mainModalPriceContainer = document.getElementById('mainModalPriceContainer');
+            modalPriceInput = document.getElementById('modalPriceInput');
+            modalOkBtn = document.getElementById('modalOkBtn');
+            modalCancelBtn = document.getElementById('modalCancelBtn');
+            editModal = document.getElementById('editModal');
+            editModalTitle = document.getElementById('editModalTitle');
+            editStraightInput = document.getElementById('editStraightInput');
+            editBoxedInput = document.getElementById('editBoxedInput');
+            editBoxedContainer = document.getElementById('editBoxedContainer');
+            editModalOkBtn = document.getElementById('editModalOkBtn');
+            editModalCancelBtn = document.getElementById('editModalCancelBtn');
+            boxedModal = document.getElementById('boxedModal');
+            boxedModalTitle = document.getElementById('boxedModalTitle');
+            boxedModalStraightCheck = document.getElementById('boxedModalStraightCheck');
+            boxedModalStraightPriceInput = document.getElementById('boxedModalStraightPriceInput');
+            boxedModalBoxedCheck = document.getElementById('boxedModalBoxedCheck');
+            boxedModalBoxedPriceInput = document.getElementById('boxedModalBoxedPriceInput');
+            boxedModalOkBtn = document.getElementById('boxedModalOkBtn');
+            boxedModalCancelBtn = document.getElementById('boxedModalCancelBtn');
+            grandTotalSummarySection = document.getElementById('grandTotalSummarySection');
+            userIdDisplay = document.getElementById('userIdDisplay');
+            closeNumberInput = document.getElementById('closeNumberInput');
+            btnAddCloseNumber = document.getElementById('btnAddCloseNumber');
+            btnDeleteAllCloseNumbers = document.getElementById('btnDeleteAllCloseNumbers');
+            closeNumbersTableBody = document.getElementById('closeNumbersTableBody');
+            confirmationMessageCloseNumbers = document.getElementById('confirmationMessageCloseNumbers');
+            closeNumberInput2digit = document.getElementById('closeNumberInput2digit');
+            btnAddCloseNumber2digit = document.getElementById('btnAddCloseNumber2digit');
+            btnDeleteAllCloseNumbers2digit = document.getElementById('btnDeleteAllCloseNumbers2digit');
+            closeNumbersTableBody2digit = document.getElementById('closeNumbersTableBody2digit');
+            confirmationMessageCloseNumbers2digit = document.getElementById('confirmationMessageCloseNumbers2digit');
+            genericModal = document.getElementById('genericModal');
+            genericModalTitle = document.getElementById('genericModalTitle');
+            genericModalMessage = document.getElementById('genericModalMessage');
+            genericModalOkBtn = document.getElementById('genericModalOkBtn');
+            genericModalCancelBtn = document.getElementById('genericModalCancelBtn');
+            customerTotalInput = document.getElementById('customerTotalInput');
+            compareTotalsBtn = document.getElementById('compareTotalsBtn');
+            comparisonResultDisplay = document.getElementById('comparisonResultDisplay');
+            largeAmountConfirmThresholdInput = document.getElementById('largeAmountConfirmThresholdInput');
+            setLargeAmountConfirmThresholdBtn = document.getElementById('setLargeAmountConfirmThresholdBtn');
+            largeAmountConfirmThresholdDisplay = document.getElementById('largeAmountConfirmThresholdDisplay');
+            menuBuyNumbers = document.getElementById('menuBuyNumbers');
+            pageBuyNumbers = document.getElementById('pageBuyNumbers');
+            customerNameInput = document.getElementById('customerNameInput');
+            currentCustomerTotalDisplay = document.getElementById('currentCustomerTotalDisplay');
+            currentCustomerTotalAmount = document.getElementById('currentCustomerTotalAmount');
+            buyPageTypeSelector = document.getElementById('buyPageTypeSelector');
+            buyNumberInput = document.getElementById('buyNumberInput');
+            buyPriceInput = document.getElementById('buyPriceInput');
+            btnBuyStraight = document.getElementById('btnBuyStraight');
+            btnBuyBoxed = document.getElementById('btnBuyBoxed');
+            btnBuyReversed = document.getElementById('btnBuyReversed');
+            confirmationMessageBuyNumbers = document.getElementById('confirmationMessageBuyNumbers');
+            currentCustomerSummaryDiv = document.getElementById('currentCustomerSummaryDiv');
+            currentCustomerNameDisplay = document.getElementById('currentCustomerNameDisplay');
+            currentCustomerEntriesList = document.getElementById('currentCustomerEntriesList');
+            btnCloseCustomer = document.getElementById('btnCloseCustomer');
+            btnNewCustomer = document.getElementById('btnNewCustomer');
+            buyCustomerCheckTotalInput = document.getElementById('buyCustomerCheckTotalInput');
+            btnBuyCompareCustomerTotal = document.getElementById('btnBuyCompareCustomerTotal');
+            buyComparisonResultDisplay = document.getElementById('buyComparisonResultDisplay');
+            allCustomersSummaryContainer = document.getElementById('allCustomersSummaryContainer');
+            quickAddPriceButtonsContainer = document.getElementById('quickAddPriceButtons');
+        }
+
+        async function initializeApp() {
+            console.log("Initializing Online App...");
+            
+            assignDOMElements();
+
+            // Setup static listeners that don't depend on data
+            setupGenericModalListeners();
+            setupPriceModalListeners();
+            setupBoxedModalListeners();
+            setupEditModalListeners();
+            setupDropdownMenuListeners();
+            setupExportPageListeners();
+
+            menuItems.forEach(item => {
+                item.addEventListener('click', (e) => setActiveMenu(e.currentTarget.id));
+            });
+            
+            const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
+            allTypes.forEach(type => {
+                setupAddNumberListeners(type);
+                setupEditDeleteListeners(type);
+            });
+            
+            setupCloseNumbersListeners();
+            setupCloseNumbers2digitListeners();
+            setupBuyNumbersPageListeners();
+
+            // Authenticate user and load their data
+            try {
+                const userCredential = await auth.signInAnonymously();
+                currentUserId = userCredential.user.uid;
+                console.log('User signed in anonymously with ID:', currentUserId);
+                if (userIdDisplay) userIdDisplay.textContent = `User ID: ${currentUserId.substring(0, 8)}...`;
+                
+                await initializeData();
+            } catch (error) {
+                console.error("Firebase authentication failed:", error);
+                await customAlert("ไม่สามารถเชื่อมต่อระบบออนไลน์ได้ โปรดรีเฟรชหน้าเว็บ", "ข้อผิดพลาด");
+                if (userIdDisplay) userIdDisplay.textContent = "User ID: Offline";
+            }
+            
+            console.log("App Initialized.");
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+    </script>
+</body>
+</html>
