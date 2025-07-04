@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคิดเลขหวย v2 (Update อั้นตรง อั้นโต๊ด)</title>
+    <title>โปรแกรมคิดเลขหวย v4 STATUS : ONLINE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -948,7 +948,7 @@
             apiKey: "AIzaSyCaXvsGBRdWddimVLgdcT5x7zhO_JvASp8",
             authDomain: "lotto-7fd8b.firebaseapp.com",
             projectId: "lotto-7fd8b",
-            storageBucket: "lotto-7fd8b.firebasestorage.app",
+            storageBucket: "lotto-7fd8b.firebaseapp.com",
             messagingSenderId: "676864882005",
             appId: "1:676864882005:web:015fc4aa5805e816942bdc",
             measurementId: "G-TTR8EXE58R"
@@ -1225,30 +1225,32 @@
         }
 
         // --- Firestore Data Management Functions ---
-        // Main document path for user-specific data
-        const getUserDataDocRef = () => {
-            if (!db || !userId) {
-                console.error("Firestore DB or User ID not available.");
+        // Main document path for shared lotto data
+        // Changed from user-specific path to a public collection for shared data
+        const getSharedLottoDataDocRef = () => {
+            if (!db) {
+                console.error("Firestore DB not available.");
                 return null;
             }
-            return doc(db, `artifacts/${appId}/users/${userId}/lottoData/userLottoData`);
+            // Data is now stored in a public collection, accessible by all users of this app
+            return doc(db, `artifacts/${appId}/public/data/lottoData/sharedLottoData`);
         };
 
         // Function to load all lotto data from Firestore initially
         async function loadAllLottoDataFromFirestore() {
-            if (!isAuthReady || !db || !userId) {
+            if (!isAuthReady || !db) { // No longer depends on userId for data path
                 console.warn("Auth not ready or Firebase not initialized for initial data loading.");
                 return {};
             }
             try {
-                const docRef = getUserDataDocRef();
+                const docRef = getSharedLottoDataDocRef();
                 if (!docRef) return {};
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     console.log("Loaded initial data from Firestore:", docSnap.data());
                     return docSnap.data();
                 } else {
-                    console.log("No such document! Initializing new data in Firestore.");
+                    console.log("No such document! Initializing new shared data in Firestore.");
                     // Initialize with default empty structures if document doesn't exist
                     const initialData = {
                         lottoData_3digit: {},
@@ -1275,12 +1277,12 @@
 
         // Function to save a specific key-value pair to the main Firestore document
         async function saveLottoDataFieldToFirestore(key, data) {
-            if (!isAuthReady || !db || !userId) {
+            if (!isAuthReady || !db) { // No longer depends on userId for data path
                 console.warn("Auth not ready or Firebase not initialized for data saving. Data not saved to Firestore.");
                 return;
             }
             try {
-                const docRef = getUserDataDocRef();
+                const docRef = getSharedLottoDataDocRef(); // Use the shared data document reference
                 if (!docRef) return;
                 const update = {};
                 update[key] = data;
@@ -1293,11 +1295,11 @@
 
         // Real-time listener for the main user data document
         function setupRealtimeDataListener() {
-            if (!isAuthReady || !db || !userId) {
+            if (!isAuthReady || !db) { // No longer depends on userId for data path
                 console.warn("Auth not ready or Firebase not initialized for real-time listener.");
                 return;
             }
-            const docRef = getUserDataDocRef();
+            const docRef = getSharedLottoDataDocRef(); // Use the shared data document reference
             if (docRef) {
                 // Unsubscribe from previous listener if exists
                 if (unsubscribeSnapshot) {
@@ -1325,7 +1327,7 @@
                         // Re-render UI based on updated global state
                         updateUIWithCurrentData();
                     } else {
-                        console.log("User data document does not exist after snapshot. It might have been cleared.");
+                        console.log("Shared data document does not exist after snapshot. It might have been cleared.");
                         // Optionally re-initialize if the document was deleted
                         // This case is handled by loadAllLottoDataFromFirestore when it creates a new document
                     }
@@ -1852,11 +1854,11 @@
         }
 
         async function clearAllDataInFirestore() {
-            if (!isAuthReady || !db || !userId) {
+            if (!isAuthReady || !db) { // No longer depends on userId for data path
                 console.warn("Firebase not ready, cannot clear data from Firestore.");
                 return;
             }
-            const docRef = getUserDataDocRef();
+            const docRef = getSharedLottoDataDocRef(); // Use the shared data document reference
             if (docRef) {
                 try {
                     await setDoc(docRef, {
@@ -3125,11 +3127,16 @@
             allCustomersSummaryContainer.querySelectorAll('.delete-customer-summary-btn').forEach(button => {
                 button.addEventListener('click', async (e) => {
                     const nameToDelete = e.target.dataset.customerName;
-                    const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบสรุปยอดของ "${nameToDelete || 'ลูกค้าไม่ระบุชื่อ'}"? (ข้อมูลเลขที่คีย์ไปแล้วจะไม่ถูกลบ)`, 'ยืนยันการลบ');
-                    if (confirmed) {
-                        delete allCustomerBuyData[nameToDelete];
-                        await saveAllCustomerBuyDataData(); // Save to Firestore
-                        await customAlert(`ลบสรุปยอดของ "${nameToDelete || 'ลูกค้าไม่ระบุชื่อ'}" เรียบร้อยแล้ว`);
+                    try { // Added try-catch block
+                        const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่ต้องการลบสรุปยอดของ "${nameToDelete || 'ลูกค้าไม่ระบุชื่อ'}"? (ข้อมูลเลขที่คีย์ไปแล้วจะไม่ถูกลบ)`, 'ยืนยันการลบ');
+                        if (confirmed) {
+                            delete allCustomerBuyData[nameToDelete];
+                            await saveAllCustomerBuyDataData(); // Save to Firestore
+                            await customAlert(`ลบสรุปยอดของ "${nameToDelete || 'ลูกค้าไม่ระบุชื่อ'}" เรียบร้อยแล้ว`);
+                        }
+                    } catch (error) {
+                        console.error("Error deleting customer summary:", error);
+                        await customAlert(`เกิดข้อผิดพลาดในการลบสรุปยอด: ${error.message}`, 'ข้อผิดพลาด');
                     }
                 });
             });
@@ -3137,20 +3144,25 @@
             allCustomersSummaryContainer.querySelectorAll('.edit-customer-summary-btn').forEach(button => {
                 button.addEventListener('click', async (e) => {
                     const nameToEdit = e.target.dataset.customerName;
-                    const customerData = allCustomerBuyData[nameToEdit];
+                    try { // Added try-catch block
+                        const customerData = allCustomerBuyData[nameToEdit];
 
-                    if (customerData) {
-                        // Load data into pending entries and customer input fields
-                        currentCustomerName = nameToEdit;
-                        currentCustomerPendingEntries = [...customerData.entries]; // Create a copy
-                        if (customerNameInput) customerNameInput.value = nameToEdit;
-                        if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = customerData.customerCheckTotal !== null ? customerData.customerCheckTotal : '';
+                        if (customerData) {
+                            // Load data into pending entries and customer input fields
+                            currentCustomerName = nameToEdit;
+                            currentCustomerPendingEntries = [...customerData.entries]; // Create a copy
+                            if (customerNameInput) customerNameInput.value = nameToEdit;
+                            if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = customerData.customerCheckTotal !== null ? customerData.customerCheckTotal : '';
 
-                        updateCurrentCustomerSummaryDisplay();
-                        setActiveMenu('menuBuyNumbers'); // Switch to the buy numbers page
-                        await customAlert(`โหลดรายการของ "${nameToEdit}" เพื่อแก้ไขแล้ว`);
-                    } else {
-                        await customAlert('ไม่พบข้อมูลลูกค้าที่ต้องการแก้ไข');
+                            updateCurrentCustomerSummaryDisplay();
+                            setActiveMenu('menuBuyNumbers'); // Switch to the buy numbers page
+                            await customAlert(`โหลดรายการของ "${nameToEdit}" เพื่อแก้ไขแล้ว`);
+                        } else {
+                            await customAlert('ไม่พบข้อมูลลูกค้าที่ต้องการแก้ไข');
+                        }
+                    } catch (error) {
+                        console.error("Error editing customer summary:", error);
+                        await customAlert(`เกิดข้อผิดพลาดในการแก้ไขสรุปยอด: ${error.message}`, 'ข้อผิดพลาด');
                     }
                 });
             });
@@ -3716,7 +3728,7 @@
             updateCloseNumbersTable();
             updateCloseNumbersTable2digit();
             updateLargeAmountConfirmThresholdDisplay();
-            updateAllCustomersSummaryDisplay();
+            await updateAllCustomersSummaryDisplay();
             updateCurrentCustomerSummaryDisplay();
             console.log("UI updated with current data.");
         }
