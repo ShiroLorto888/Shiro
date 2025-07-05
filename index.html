@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคิดเลขหวย v4 STATUS : ONLINE</title>
+    <title>โปรแกรมคิดเลขหวย v6 STATUS : ONLINE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2383,7 +2383,7 @@
                         }
                         if (result.addBoxed) {
                             // No need to check for closed number here, it's checked in addOrUpdateLottoEntry
-                            const added = await addOrUpdateLottoEntry(n, result.boxedPrice, 'boxed');
+                            const added = await addEntryToPendingList(n, result.boxedPrice, 'boxed');
                             if (added) {
                                 totalBoxedPrice += result.boxedPrice;
                                 addedAny = true;
@@ -2443,7 +2443,7 @@
                 btnExport.addEventListener('click', () => exportTableToExcel(type));
             }
              if (btnExportExcess && type === '2digitTop') { // Specific for 2digitTop excess
-                btnExportExcess.addEventListener('click', () => exportExcessTableToExcel(type));
+                btnExportExcess.addEventListener('click', async () => await exportExcessTableToExcel(type));
             }
 
             if (numberInput) {
@@ -2654,40 +2654,54 @@
             XLSX.writeFile(wb, `${tableName}.xlsx`);
         }
 
-        function exportExcessTableToExcel(type) {
+        async function exportExcessTableToExcel(type) {
             const tableId = `table${type}`;
             const tableName = getLottoTypeDisplayName(type);
             const table = document.getElementById(tableId);
 
             if (!table) {
-                customAlert(`ไม่พบตารางสำหรับ ${tableName}`);
+                await customAlert(`ไม่พบตารางสำหรับ ${tableName}`);
                 return;
             }
 
             const headerRow = ['ตัวเลข', 'ราคาเกิน']; // Only these columns
-
             const rows = [];
-            table.querySelectorAll('tbody tr').forEach(tr => {
-                const num = tr.cells[0].textContent.trim();
-                let excessPrice = 0;
+            let lottoDataObject = await loadData(type); // Get a mutable copy of the current data
+            const updatedLottoData = { ...lottoDataObject }; // Create a shallow copy to modify
 
-                if (type === '3digit') {
-                    const limitStraightText = tr.cells[3].textContent.trim();
-                    const limitBoxedText = tr.cells[4].textContent.trim();
-                    excessPrice = (limitStraightText === '-') ? 0 : parseFloat(limitStraightText.replace(/,/g, ''));
-                    excessPrice += (limitBoxedText === '-') ? 0 : parseFloat(limitBoxedText.replace(/,/g, ''));
-                } else {
-                    const limitStraightText = tr.cells[2].textContent.trim();
-                    excessPrice = (limitStraightText === '-') ? 0 : parseFloat(limitStraightText.replace(/,/g, ''));
+            const limitThresholdStraight = Number(limitThresholds[`${type}_straight`]) || 0;
+            const limitThresholdBoxed = (type === '3digit') ? (Number(limitThresholds[`${type}_boxed`]) || 0) : 0;
+
+            for (const num of Object.keys(lottoDataObject).sort()) {
+                const itemData = lottoDataObject[num];
+                const straightOriginal = Number(itemData?.straight) || 0;
+                const boxedOriginal = Number(itemData?.boxed) || 0;
+
+                let limitStraightDisplay = 0;
+                let limitBoxedDisplay = 0;
+
+                if (limitThresholdStraight > 0 && straightOriginal > limitThresholdStraight) {
+                    limitStraightDisplay = straightOriginal - limitThresholdStraight;
                 }
+
+                if (type === '3digit' && limitThresholdBoxed > 0 && boxedOriginal > limitThresholdBoxed) {
+                    limitBoxedDisplay = boxedOriginal - limitThresholdBoxed;
+                }
+
+                const excessPrice = limitStraightDisplay + limitBoxedDisplay;
 
                 if (excessPrice > 0) {
-                    rows.push([num, formatPrice(excessPrice)]);
+                    rows.push([num, Math.floor(excessPrice)]); // Export without decimals
+                    // Update the data to remove the excess
+                    updatedLottoData[num].straight = straightOriginal - limitStraightDisplay;
+                    if (type === '3digit') {
+                        updatedLottoData[num].boxed = boxedOriginal - limitBoxedDisplay;
+                    }
                 }
-            });
+            }
 
             if (rows.length === 0) {
-                customAlert(`ไม่มีเลขเกินสำหรับ ${tableName} ที่จะ Export ได้`);
+                await customAlert(`ไม่มีเลขเกินสำหรับ ${tableName} ที่จะ Export ได้`);
                 return;
             }
 
@@ -2702,12 +2716,24 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, `${tableName}_เกิน`);
             XLSX.writeFile(wb, `${tableName}_เลขเกิน.xlsx`);
+
+            // Save the updated lotto data back to Firestore
+            await saveData(type, updatedLottoData);
+            // Refresh the UI to reflect the changes
+            await updateTable(type);
+            await updateGrandTotalSummary();
+            await customAlert(`Export เลขเกินสำหรับ ${tableName} และลบยอดเกินเรียบร้อยแล้ว`);
         }
 
 
         async function exportAllTablesToExcel() {
+            const confirmed = await customConfirm('คุณต้องการ Export ข้อมูลทั้งหมด (รวมถึงเลขเกิน) ใช่หรือไม่?');
+            if (!confirmed) return;
+
             const wb = XLSX.utils.book_new();
             const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
+            let hasDataToExport = false;
+            const updatedDataForSaving = {}; // To store modified data before saving all at once
 
             for (const type of allTypes) {
                 const tableId = `table${type}`;
@@ -2715,6 +2741,7 @@
                 const table = document.getElementById(tableId);
 
                 if (table) {
+                    hasDataToExport = true; // At least one table exists
                     const headerRow = [];
                     table.querySelectorAll('thead th').forEach(th => {
                         const text = th.textContent.trim();
@@ -2724,21 +2751,66 @@
                     });
 
                     const rows = [];
-                    table.querySelectorAll('tbody tr').forEach(tr => {
-                        const rowData = [];
-                        tr.querySelectorAll('td').forEach((td, index) => {
-                            if (index < tr.querySelectorAll('td').length - 1) {
-                                let cellText = td.textContent.trim();
-                                if (cellText.includes('บาท')) {
-                                    cellText = cellText.replace('บาท', '').trim();
-                                }
-                                cellText = cellText.replace(/,/g, '');
-                                if (cellText === '-') cellText = '0';
-                                rowData.push(cellText);
-                            }
-                        });
+                    let lottoDataObject = await loadData(type);
+                    const currentTypeUpdatedData = { ...lottoDataObject }; // Create a copy for this type
+
+                    const limitThresholdStraight = Number(limitThresholds[`${type}_straight`]) || 0;
+                    const limitThresholdBoxed = (type === '3digit') ? (Number(limitThresholds[`${type}_boxed`]) || 0) : 0;
+
+                    for (const num of Object.keys(lottoDataObject).sort()) {
+                        const itemData = lottoDataObject[num];
+                        const straightOriginal = Number(itemData?.straight) || 0;
+                        const boxedOriginal = Number(itemData?.boxed) || 0;
+
+                        let straightDisplay = straightOriginal;
+                        let boxedDisplay = boxedOriginal;
+                        let limitStraightDisplay = 0;
+                        let limitBoxedDisplay = 0;
+
+                        if (limitThresholdStraight > 0 && straightOriginal > limitThresholdStraight) {
+                            straightDisplay = limitThresholdStraight;
+                            limitStraightDisplay = straightOriginal - limitThresholdStraight;
+                        }
+
+                        if (type === '3digit' && limitThresholdBoxed > 0 && boxedOriginal > limitThresholdBoxed) {
+                            boxedDisplay = limitThresholdBoxed;
+                            limitBoxedDisplay = boxedOriginal - limitThresholdBoxed;
+                        }
+
+                        const totalOriginal = straightOriginal + boxedOriginal;
+
+                        const rowData = [
+                            num,
+                            formatPrice(straightDisplay),
+                            (type === '3digit') ? formatPrice(boxedDisplay) : formatPrice(limitStraightDisplay), // For 3digit it's boxed, for others it's excess
+                            (type === '3digit') ? (limitStraightDisplay > 0 ? formatPrice(limitStraightDisplay) : '-') : formatPrice(totalOriginal), // For 3digit it's excess straight, for others it's total
+                            (type === '3digit') ? (limitBoxedDisplay > 0 ? formatPrice(limitBoxedDisplay) : '-') : '', // Only for 3digit excess boxed
+                            (type === '3digit') ? formatPrice(totalOriginal) : '' // Only for 3digit total
+                        ];
+
+                        // Adjust rowData for non-3digit types to match table structure
+                        if (type !== '3digit') {
+                            // The table structure for non-3digit is: เลข, ราคา(สุทธิ), เกิน, ยอดรวม
+                            // So we need: num, straightDisplay, limitStraightDisplay, totalOriginal
+                            rowData[1] = formatPrice(straightDisplay); // ราคา (สุทธิ)
+                            rowData[2] = limitStraightDisplay > 0 ? formatPrice(limitStraightDisplay) : '-'; // เกิน
+                            rowData[3] = formatPrice(totalOriginal); // ยอดรวม
+                            rowData.splice(4, 2); // Remove extra elements if any
+                        }
+
+
                         rows.push(rowData);
-                    });
+
+                        // Also prepare data for the "excess" sheet
+                        const excessPrice = limitStraightDisplay + limitBoxedDisplay;
+                        if (excessPrice > 0) {
+                            // Update the data for saving (remove excess)
+                            currentTypeUpdatedData[num].straight = straightOriginal - limitStraightDisplay;
+                            if (type === '3digit') {
+                                currentTypeUpdatedData[num].boxed = boxedOriginal - limitBoxedDisplay;
+                            }
+                        }
+                    }
 
                     const footerRow = [];
                     table.querySelectorAll('tfoot td').forEach(td => {
@@ -2758,14 +2830,61 @@
                     }));
                     ws['!cols'] = colWidths;
 
-
                     XLSX.utils.book_append_sheet(wb, ws, tableName);
+
+                    // Store the updated data for this type
+                    updatedDataForSaving[`lottoData_${type}`] = currentTypeUpdatedData;
+
+                    // Also create a separate sheet for excess numbers if any
+                    const excessHeader = ['ตัวเลข', 'ราคาเกิน'];
+                    const excessRows = [];
+                    for (const num of Object.keys(lottoDataObject).sort()) {
+                        const itemData = lottoDataObject[num];
+                        const straightOriginal = Number(itemData?.straight) || 0;
+                        const boxedOriginal = Number(itemData?.boxed) || 0;
+
+                        let limitStraightDisplay = 0;
+                        let limitBoxedDisplay = 0;
+
+                        if (limitThresholdStraight > 0 && straightOriginal > limitThresholdStraight) {
+                            limitStraightDisplay = straightOriginal - limitThresholdStraight;
+                        }
+
+                        if (type === '3digit' && limitThresholdBoxed > 0 && boxedOriginal > limitThresholdBoxed) {
+                            limitBoxedDisplay = boxedOriginal - limitBoxedThreshold;
+                        }
+
+                        const excessPrice = limitStraightDisplay + limitBoxedDisplay;
+                        if (excessPrice > 0) {
+                            excessRows.push([num, Math.floor(excessPrice)]); // Export without decimals
+                        }
+                    }
+
+                    if (excessRows.length > 0) {
+                        const excessWsData = [excessHeader, ...excessRows];
+                        const excessWs = XLSX.utils.aoa_to_sheet(excessWsData);
+                        const excessColWidths = excessWsData[0].map((_, colIndex) => ({
+                            wch: Math.max(...excessWsData.map(row => (row[colIndex] ? String(row[colIndex]).length : 0))) + 2
+                        }));
+                        excessWs['!cols'] = excessColWidths;
+                        XLSX.utils.book_append_sheet(wb, excessWs, `${tableName}_เกิน`);
+                    }
                 }
             }
 
-            if (wb.SheetNames.length > 0) {
+            if (hasDataToExport) {
                 XLSX.writeFile(wb, 'สรุปยอดหวยทั้งหมด.xlsx');
                 await customAlert('Export ข้อมูลทั้งหมดเรียบร้อยแล้ว');
+
+                // Save all updated data back to Firestore after export
+                for (const typeToSave of Object.keys(updatedDataForSaving)) {
+                    // Extract the base type name from 'lottoData_type'
+                    const baseType = typeToSave.replace('lottoData_', '');
+                    await saveData(baseType, updatedDataForSaving[typeToSave]);
+                }
+                // Re-render the UI to reflect the changes across all tables
+                await updateUIWithCurrentData();
+
             } else {
                 await customAlert('ไม่มีข้อมูลสำหรับ Export');
             }
@@ -2866,51 +2985,75 @@
                         const wb = XLSX.utils.book_new();
                         const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
                         let hasExcess = false;
+                        const updatedDataForSaving = {}; // Store modified data for saving after export
 
                         for (const type of allTypes) {
-                            const tableId = `table${type}`;
                             const tableName = getLottoTypeDisplayName(type);
-                            const table = document.getElementById(tableId);
+                            let lottoDataObject = await loadData(type); // Get a mutable copy of the current data
+                            const currentTypeUpdatedData = { ...lottoDataObject }; // Create a shallow copy to modify
 
-                            if (table) {
-                                const headerRow = ['ตัวเลข', 'ราคาเกิน'];
-                                const rows = [];
+                            const headerRow = ['ตัวเลข', 'ราคาเกิน'];
+                            const rows = [];
 
-                                table.querySelectorAll('tbody tr').forEach(tr => {
-                                    const num = tr.cells[0].textContent.trim();
-                                    let excessPrice = 0;
+                            const limitThresholdStraight = Number(limitThresholds[`${type}_straight`]) || 0;
+                            const limitThresholdBoxed = (type === '3digit') ? (Number(limitThresholds[`${type}_boxed`]) || 0) : 0;
 
+                            for (const num of Object.keys(lottoDataObject).sort()) {
+                                const itemData = lottoDataObject[num];
+                                const straightOriginal = Number(itemData?.straight) || 0;
+                                const boxedOriginal = Number(itemData?.boxed) || 0;
+
+                                let limitStraightDisplay = 0;
+                                let limitBoxedDisplay = 0;
+
+                                if (limitThresholdStraight > 0 && straightOriginal > limitThresholdStraight) {
+                                    limitStraightDisplay = straightOriginal - limitThresholdStraight;
+                                }
+
+                                if (type === '3digit' && limitThresholdBoxed > 0 && boxedOriginal > limitThresholdBoxed) {
+                                    limitBoxedDisplay = boxedOriginal - limitThresholdBoxed;
+                                }
+
+                                const excessPrice = limitStraightDisplay + limitBoxedDisplay;
+
+                                if (excessPrice > 0) {
+                                    rows.push([num, Math.floor(excessPrice)]); // Export without decimals
+                                    hasExcess = true;
+
+                                    // Update the data to remove the excess
+                                    currentTypeUpdatedData[num].straight = straightOriginal - limitStraightDisplay;
                                     if (type === '3digit') {
-                                        const limitStraightText = tr.cells[3].textContent.trim();
-                                        const limitBoxedText = tr.cells[4].textContent.trim();
-                                        excessPrice = (limitStraightText === '-') ? 0 : parseFloat(limitStraightText.replace(/,/g, ''));
-                                        excessPrice += (limitBoxedText === '-') ? 0 : parseFloat(limitBoxedText.replace(/,/g, ''));
-                                    } else {
-                                        const limitStraightText = tr.cells[2].textContent.trim();
-                                        excessPrice = (limitStraightText === '-') ? 0 : parseFloat(limitStraightText.replace(/,/g, ''));
+                                        currentTypeUpdatedData[num].boxed = boxedOriginal - limitBoxedDisplay;
                                     }
-
-                                    if (excessPrice > 0) {
-                                        rows.push([num, formatPrice(excessPrice)]);
-                                        hasExcess = true;
-                                    }
-                                });
-
-                                if (rows.length > 0) {
-                                    const ws_data = [headerRow, ...rows];
-                                    const ws = XLSX.utils.aoa_to_sheet(ws_data);
-                                    const colWidths = ws_data[0].map((_, colIndex) => ({
-                                        wch: Math.max(...ws_data.map(row => (row[colIndex] ? String(row[colIndex]).length : 0))) + 2
-                                    }));
-                                    ws['!cols'] = colWidths;
-                                    XLSX.utils.book_append_sheet(wb, ws, `${tableName}_เกิน`);
                                 }
                             }
+
+                            if (rows.length > 0) {
+                                const ws_data = [headerRow, ...rows];
+                                const ws = XLSX.utils.aoa_to_sheet(ws_data);
+                                const colWidths = ws_data[0].map((_, colIndex) => ({
+                                    wch: Math.max(...ws_data.map(row => (row[colIndex] ? String(row[colIndex]).length : 0))) + 2
+                                }));
+                                ws['!cols'] = colWidths;
+                                XLSX.utils.book_append_sheet(wb, ws, `${tableName}_เกิน`);
+                            }
+                            // Store the updated data for this type in the temporary object
+                            updatedDataForSaving[`lottoData_${type}`] = currentTypeUpdatedData;
                         }
 
                         if (hasExcess) {
                             XLSX.writeFile(wb, 'สรุปเลขเกินทั้งหมด.xlsx');
                             await customAlert('Export เลขเกินทั้งหมดเรียบร้อยแล้ว');
+
+                            // Save all updated data back to Firestore after export
+                            for (const typeToSave of Object.keys(updatedDataForSaving)) {
+                                // Extract the base type name from 'lottoData_type'
+                                const baseType = typeToSave.replace('lottoData_', '');
+                                await saveData(baseType, updatedDataForSaving[typeToSave]);
+                            }
+                            // Re-render the UI to reflect the changes across all tables
+                            await updateUIWithCurrentData();
+
                         } else {
                             await customAlert('ไม่มีเลขเกินสำหรับ Export');
                         }
