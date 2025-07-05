@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>โปรแกรมคิดเลขหวย v6 STATUS : ONLINE</title>
+    <title>โปรแกรมคิดเลขหวย v7 STATUS : ONLINE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -139,8 +139,8 @@
                 <button id="menuRunTop" data-page="pageRunTop" class="menu-item">วิ่งบน</button>
                 <button id="menuRunBottom" data-page="pageRunBottom" class="menu-item">วิ่งล่าง</button>
                 <button id="menuRun2Top" data-page="pageRun2Top" class="menu-item">วิ่ง2ตัวบน</button>
-                <button id="menuPack4" data-page="pagePack4" class="menu-item">แพ4ตัว</button>
-                <button id="menuPack5" data-page="pagePack5" class="menu-item">แพ5ตัว</button>
+                <button data-type="Pack4" class="buy-type-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md transition duration-150">แพ 4 ตัว</button>
+                <button data-type="Pack5" class="buy-type-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-md transition duration-150">แพ 5 ตัว</button>
                 <button id="menuCloseNumbers" data-page="pageCloseNumbers" class="menu-item">ตัวปิด</button>
                 <button id="menuCloseNumbers2digit" data-page="pageCloseNumbers2digit" class="menu-item">ตัวปิด2หลัก</button>
             </div>
@@ -2851,7 +2851,7 @@
                         }
 
                         if (type === '3digit' && limitThresholdBoxed > 0 && boxedOriginal > limitThresholdBoxed) {
-                            limitBoxedDisplay = boxedOriginal - limitBoxedThreshold;
+                            limitBoxedDisplay = boxedOriginal - limitThresholdBoxed;
                         }
 
                         const excessPrice = limitStraightDisplay + limitBoxedDisplay;
@@ -3242,14 +3242,29 @@
                     }
                 }
 
+                // Calculate type-specific totals for this customer
+                const customerTypeTotals = {};
+                customerData.entries.forEach(entry => {
+                    customerTypeTotals[entry.type] = (customerTypeTotals[entry.type] || 0) + entry.price;
+                });
+
+                let typeTotalsHtml = '';
+                const orderedTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5']; // Define a display order
+                orderedTypes.forEach(typeKey => {
+                    if (customerTypeTotals[typeKey]) {
+                        typeTotalsHtml += `<p class="text-sm text-gray-600">ยอดรวม[${getLottoTypeDisplayName(typeKey)}]: <span class="font-semibold">${formatPrice(customerTypeTotals[typeKey])} บาท</span></p>`;
+                    }
+                });
+
+
                 card.innerHTML = `
                     <h3 class="text-xl font-bold text-gray-800 mb-2">${name || 'ลูกค้าไม่ระบุชื่อ'}</h3>
                     <ul class="text-sm text-gray-600 mb-3 max-h-24 overflow-y-auto border-b pb-2">
                         ${entriesHtml}
                     </ul>
-                    <div class="flex justify-between items-center text-md font-semibold text-gray-700">
-                        <span>ยอดรวม:</span>
-                        <span>${formatPrice(customerData.total)} บาท</span>
+                    <div class="mt-3 space-y-1">
+                        ${typeTotalsHtml}
+                        <p class="text-md font-bold text-gray-800 border-t pt-2 mt-2">ยอดรวม[ทั้งหมด]: <span class="text-green-700">${formatPrice(customerData.total)} บาท</span></p>
                     </div>
                     <div class="flex justify-between items-center text-sm text-gray-500 mt-1">
                         <span>ยอดลูกค้าแจ้ง:</span>
