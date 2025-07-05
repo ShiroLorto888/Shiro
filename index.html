@@ -1308,7 +1308,8 @@
                 unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const newData = docSnap.data();
-                        console.log("Firestore onSnapshot triggered. New data received."); // Log
+                        console.log("Real-time update from Firestore:", newData);
+
                         // Update global state with new data
                         lottoData3digit = newData.lottoData_3digit || {};
                         lottoData2digitTop = newData.lottoData_2digitTop || {};
@@ -1324,7 +1325,6 @@
                         allCustomerBuyData = newData.allCustomerBuyData || {};
 
                         // Re-render UI based on updated global state
-                        console.log("Global data variables updated. Calling updateUIWithCurrentData()."); // Log
                         updateUIWithCurrentData();
                     } else {
                         console.log("Shared data document does not exist after snapshot. It might have been cleared.");
@@ -1637,7 +1637,6 @@
 
         // --- GUI Update Functions ---
         async function updateTable(type) {
-            console.log(`--- updateTable for type: ${type} started ---`); // Log
             let data, tableBody, tableFooter;
             data = await loadData(type); // Load current data
             if (type === '3digit') { tableBody = tableBody3digit; tableFooter = tableFooter3digit; }
@@ -1729,11 +1728,9 @@
                     <td></td> `;
             }
             tableFooter.appendChild(footerRow);
-            console.log(`--- updateTable for type: ${type} finished ---`); // Log
         }
 
         async function updateGrandTotalSummary() {
-            console.log("--- updateGrandTotalSummary started ---"); // Log
             // Defensive check: Ensure element exists
             if (!grandTotalSummarySection) {
                 console.warn("updateGrandTotalSummary: grandTotalSummarySection not found.");
@@ -1757,7 +1754,6 @@
 
             currentGrandTotal = calculatedGrandTotal; // Update the global variable
             grandTotalSummarySection.querySelector('span:first-child').textContent = `ยอดรวมทุกรายการ (ตั้งต้น): ${formatPrice(currentGrandTotal)}`;
-            console.log("--- updateGrandTotalSummary finished ---"); // Log
         }
 
         function updateLimitIndicator(type) {
@@ -3075,15 +3071,9 @@
         }
 
         async function updateAllCustomersSummaryDisplay() {
-            console.log("--- updateAllCustomersSummaryDisplay started ---"); // Log
-            if (!allCustomersSummaryContainer) {
-                console.warn("updateAllCustomersSummaryDisplay: allCustomersSummaryContainer not found.");
-                return;
-            }
+            if (!allCustomersSummaryContainer) return;
 
             const latestAllCustomerBuyData = await loadAllCustomerBuyDataData(); // Ensure latest data is used
-            console.log("Current allCustomerBuyData for display:", JSON.stringify(latestAllCustomerBuyData)); // Log
-
             allCustomersSummaryContainer.innerHTML = '';
             const customerNames = Object.keys(latestAllCustomerBuyData).sort();
 
@@ -3176,7 +3166,6 @@
                     }
                 });
             });
-            console.log("--- updateAllCustomersSummaryDisplay finished ---"); // Log
         }
 
 
@@ -3343,10 +3332,6 @@
 
             if (btnCloseCustomer) {
                 btnCloseCustomer.addEventListener('click', async () => {
-                    console.log("--- Starting 'ปิดยอด' (Close Customer) process ---");
-                    console.log("Customer Name:", currentCustomerName);
-                    console.log("Pending Entries BEFORE processing:", JSON.stringify(currentCustomerPendingEntries));
-
                     if (currentCustomerPendingEntries.length === 0) {
                         await customAlert('ไม่มีรายการสำหรับลูกค้าคนนี้ที่จะปิดยอด');
                         return;
@@ -3358,62 +3343,25 @@
                     });
 
                     const customerCheckTotal = parseFloat(buyCustomerCheckTotalInput ? buyCustomerCheckTotalInput.value : 0);
+                    // Use currentCustomerName which is updated in real-time
                     const customerName = currentCustomerName || `ลูกค้า ${Object.keys(allCustomerBuyData).length + 1}`;
 
                     const confirmed = await customConfirm(`คุณแน่ใจหรือไม่ที่จะปิดยอดสำหรับ "${customerName}"? ยอดรวม: ${formatPrice(totalCurrentCustomerPurchase)} บาท`);
                     if (!confirmed) return;
 
-                    // Create a temporary object to hold all updates for lottoData types
-                    // This is to ensure we load the latest state ONCE before applying all pending entries
-                    // and then save the entire updated state for each lotto type.
-                    const tempLottoDataUpdates = {
-                        '3digit': { ...lottoData3digit },
-                        '2digitTop': { ...lottoData2digitTop },
-                        '2digitBottom': { ...lottoData2digitBottom },
-                        'RunTop': { ...lottoDataRunTop },
-                        'RunBottom': { ...lottoDataRunBottom },
-                        'Run2Top': { ...lottoDataRun2Top },
-                        'Pack4': { ...lottoDataPack4 },
-                        'Pack5': { ...lottoDataPack5 }
-                    };
-                    console.log("Initial tempLottoDataUpdates (cloned global data):", JSON.stringify(tempLottoDataUpdates));
-
-
+                    // Process each pending entry and add to respective lottoData
                     for (const entry of currentCustomerPendingEntries) {
-                        console.log(`Processing entry: Type=${entry.type}, Number=${entry.number}, Price=${entry.price}, BuyType=${entry.buyType}`);
-                        let lottoDataObject = tempLottoDataUpdates[entry.type]; // Use the temporary object for modifications
-
-                        if (!lottoDataObject) {
-                            console.error(`Invalid lottoData type in pending entry: ${entry.type}`);
-                            continue; // Skip this entry if type is invalid
-                        }
-
+                        let lottoDataObject = await loadData(entry.type); // Load latest data before modification
                         if (!lottoDataObject[entry.number]) {
                             lottoDataObject[entry.number] = { straight: 0, boxed: 0 };
-                            console.log(`Initialized new entry for ${entry.number} in ${entry.type} (temp)`);
                         }
-
-                        const oldStraight = lottoDataObject[entry.number].straight;
-                        const oldBoxed = lottoDataObject[entry.number].boxed;
 
                         if (entry.buyType === 'straight' || entry.buyType === 'reversed') {
                             lottoDataObject[entry.number].straight += entry.price;
-                            console.log(`Updated straight for ${entry.number} in ${entry.type} (temp) from ${oldStraight} to ${lottoDataObject[entry.number].straight}`);
                         } else if (entry.buyType === 'boxed' && entry.type === '3digit') {
                             lottoDataObject[entry.number].boxed += entry.price;
-                            console.log(`Updated boxed for ${entry.number} in ${entry.type} (temp) from ${oldBoxed} to ${lottoDataObject[entry.number].boxed}`);
                         }
-                        // Note: saveData is called AFTER the loop to ensure all updates for a type are batched
-                    }
-
-                    // Now, save all updated lottoData types to Firestore
-                    for (const type in tempLottoDataUpdates) {
-                        if (tempLottoDataUpdates.hasOwnProperty(type)) {
-                            // Only save if the data for this type has actually changed (optional optimization)
-                            // For simplicity, we'll save all types that were part of the temp update
-                            await saveData(type, tempLottoDataUpdates[type]);
-                            console.log(`Saved updated lottoData for type ${type} to Firestore.`);
-                        }
+                        await saveData(entry.type, lottoDataObject); // Save updated data for each type to Firestore
                     }
 
                     // Store customer summary
@@ -3422,22 +3370,398 @@
                         total: totalCurrentCustomerPurchase,
                         customerCheckTotal: isNaN(customerCheckTotal) ? null : customerCheckTotal
                     };
-                    console.log("Finished processing all pending entries. Customer summary will be saved.");
                     await saveAllCustomerBuyDataData(); // Save to Firestore
-                    console.log("Customer summary saved. Firestore onSnapshot should now trigger UI updates.");
 
                     // Clear current customer data for the next one
                     currentCustomerPendingEntries = [];
                     if (customerNameInput) customerNameInput.value = '';
                     currentCustomerName = ''; // Clear the name variable too
                     if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = '';
-                    updateCurrentCustomerSummaryDisplay(); // This is fine to clear the pending list display
+                    updateCurrentCustomerSummaryDisplay();
                     await customAlert(`ปิดยอดสำหรับ "${customerName}" เรียบร้อยแล้ว!`);
-                    console.log("--- 'ปิดยอด' (Close Customer) process finished ---");
                 });
             }
 
             if (btnNewCustomer) {
                 btnNewCustomer.addEventListener('click', async () => {
                     if (currentCustomerPendingEntries.length > 0) {
-                        const confirmed = await customConfirm('คุณแน่ใจหรือไม่ที่จะเริ่มลูกค้าใหม่? รายการที่ยังไม่ได้ปิดยอดจะ
+                        const confirmed = await customConfirm('คุณแน่ใจหรือไม่ที่จะเริ่มลูกค้าใหม่? รายการที่ยังไม่ได้ปิดยอดจะถูกล้าง', 'ยืนยัน');
+                        if (!confirmed) return;
+                    }
+                    currentCustomerPendingEntries = [];
+                    if (customerNameInput) customerNameInput.value = '';
+                    currentCustomerName = ''; // Clear the name variable too
+                    if (buyCustomerCheckTotalInput) buyCustomerCheckTotalInput.value = '';
+                    updateCurrentCustomerSummaryDisplay();
+                    displayConfirmationMessage('BuyNumbers', 'เริ่มลูกค้าใหม่แล้ว');
+                });
+            }
+
+            if (buyCustomerCheckTotalInput) {
+                buyCustomerCheckTotalInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        if (btnBuyCompareCustomerTotal) btnBuyCompareCustomerTotal.click();
+                    }
+                });
+            }
+
+            if (btnBuyCompareCustomerTotal) {
+                btnBuyCompareCustomerTotal.addEventListener('click', () => {
+                    const enteredTotal = parseFloat(buyCustomerCheckTotalInput ? buyCustomerCheckTotalInput.value : 0);
+                    let currentCalculatedTotal = 0;
+                    currentCustomerPendingEntries.forEach(entry => {
+                        currentCalculatedTotal += entry.price;
+                    });
+
+                    if (isNaN(enteredTotal)) {
+                        customAlert('กรุณาป้อนยอดรวมที่ลูกค้าแจ้งเป็นตัวเลข');
+                        return;
+                    }
+
+                    if (buyComparisonResultDisplay) {
+                        buyComparisonResultDisplay.classList.remove('hidden');
+                        if (Math.abs(enteredTotal - currentCalculatedTotal) < 0.01) {
+                            buyComparisonResultDisplay.className = 'mt-4 p-3 rounded-md text-center comparison-match';
+                            buyComparisonResultDisplay.textContent = `ยอดตรงกัน! (${formatPrice(currentCalculatedTotal)} บาท)`;
+                        } else {
+                            buyComparisonResultDisplay.className = 'mt-4 p-3 rounded-md text-center comparison-mismatch';
+                            buyComparisonResultDisplay.textContent = `ยอดไม่ตรงกัน! ระบบ: ${formatPrice(currentCalculatedTotal)} บาท, ลูกค้า: ${formatPrice(enteredTotal)} บาท (ส่วนต่าง: ${formatPrice(enteredTotal - currentCalculatedTotal)} บาท)`;
+                        }
+                    }
+                });
+            }
+
+            // Quick Add Price Buttons Listener
+            if (quickAddPriceButtonsContainer) {
+                quickAddPriceButtonsContainer.addEventListener('click', (e) => {
+                    const target = e.target;
+                    if (target.classList.contains('quick-add-price-btn')) {
+                        const valueToAdd = parseFloat(target.dataset.value);
+                        let currentPrice = parseFloat(buyPriceInput.value || '0'); // Ensure it's a number, default to 0
+                        if (isNaN(currentPrice)) { // Fallback if parseFloat returns NaN
+                            currentPrice = 0;
+                        }
+                        buyPriceInput.value = (currentPrice + valueToAdd).toFixed(2);
+                        highlightError(buyPriceInput, false); // Clear error if any
+                    }
+                });
+            }
+
+
+            // Initial setup for buy page
+            updateBuyPageActionButtons();
+            updateCurrentCustomerSummaryDisplay();
+            updateAllCustomersSummaryDisplay();
+
+            if (buyNumberInput) {
+                buyNumberInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        if (buyPriceInput) buyPriceInput.focus();
+                    }
+                });
+            }
+            if (buyPriceInput) {
+                buyPriceInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        // Simulate click on appropriate button based on currentBuyPageLottoType
+                        if (currentBuyPageLottoType === '3digit') {
+                            if (btnBuyStraight) btnBuyStraight.click();
+                        } else if (currentBuyPageLottoType === '2digitTop' || currentBuyPageLottoType === '2digitBottom' || currentBuyPageLottoType === 'RunTop' || currentBuyPageLottoType === 'RunBottom' || currentBuyPageLottoType === 'Run2Top' || currentBuyPageLottoType === 'Pack4' || currentBuyPageLottoType === 'Pack5') {
+                            if (btnBuyStraight) btnBuyStraight.click();
+                        }
+                    }
+                });
+            }
+        }
+
+
+        // --- Initialize All Components ---
+        // Function to set up all UI event listeners (called only once)
+        function setupAllUIListeners() {
+            if (areUILoadedAndListenersSetup) return; // Prevent duplicate setup
+
+            console.log("Assigning DOM elements and setting up all UI Listeners...");
+
+            // Assign DOM elements
+            pageContainer = document.getElementById('pageContainer');
+            allPageContents = document.querySelectorAll('.page-content');
+            menuItems = document.querySelectorAll('.menu-item');
+            hamburgerBtn = document.getElementById('hamburgerBtn');
+            dropdownMenu = document.getElementById('dropdownMenu');
+            dropdownExportBtn = document.getElementById('dropdownExportBtn');
+            dropdownExportLimitedBtn = document.getElementById('dropdownExportLimitedBtn');
+            dropdownClearAllBtn = document.getElementById('dropdownClearAllBtn');
+
+            // 3 Digit
+            page3digit = document.getElementById('page3digit');
+            numberInput3digit = document.getElementById('numberInput3digit');
+            priceInput3digit = document.getElementById('priceInput3digit');
+            btnStraight3digit = document.getElementById('btnStraight3digit');
+            btnReversed3digit = document.getElementById('btnReversed3digit');
+            btnBoxed3digit = document.getElementById('btnBoxed3digit');
+            btnLimit3digit = document.getElementById('btnLimit3digit');
+            btnLimit3digitBoxed = document.getElementById('btnLimit3digitBoxed');
+            btnExport3digit = document.getElementById('btnExport3digit');
+            tableBody3digit = document.getElementById('lottoTableBody3digit');
+            tableFooter3digit = document.getElementById('lottoTableFooter3digit');
+            limitIndicator3digit = document.getElementById('limitIndicator3digit');
+            confirmationMessage3digit = document.getElementById('confirmationMessage3digit');
+            // 2 Digit Top
+            page2digitTop = document.getElementById('page2digitTop');
+            numberInput2digitTop = document.getElementById('numberInput2digitTop');
+            priceInput2digitTop = document.getElementById('priceInput2digitTop');
+            btnStraight2digitTop = document.getElementById('btnStraight2digitTop');
+            btnReversed2digitTop = document.getElementById('btnReversed2digitTop');
+            btnLimit2digitTop = document.getElementById('btnLimit2digitTop');
+            btnExport2digitTop = document.getElementById('btnExport2digitTop');
+            btnExport2digitTopExcess = document.getElementById('btnExport2digitTopExcess');
+            tableBody2digitTop = document.getElementById('lottoTableBody2digitTop');
+            tableFooter2digitTop = document.getElementById('lottoTableFooter2digitTop');
+            limitIndicator2digitTop = document.getElementById('limitIndicator2digitTop');
+            confirmationMessage2digitTop = document.getElementById('confirmationMessage2digitTop');
+            // 2 Digit Bottom
+            page2digitBottom = document.getElementById('page2digitBottom');
+            numberInput2digitBottom = document.getElementById('numberInput2digitBottom');
+            priceInput2digitBottom = document.getElementById('priceInput2digitBottom');
+            btnStraight2digitBottom = document.getElementById('btnStraight2digitBottom');
+            btnReversed2digitBottom = document.getElementById('btnReversed2digitBottom');
+            btnLimit2digitBottom = document.getElementById('btnLimit2digitBottom');
+            btnExport2digitBottom = document.getElementById('btnExport2digitBottom');
+            tableBody2digitBottom = document.getElementById('lottoTableBody2digitBottom');
+            tableFooter2digitBottom = document.getElementById('lottoTableFooter2digitBottom');
+            limitIndicator2digitBottom = document.getElementById('limitIndicator2digitBottom');
+            confirmationMessage2digitBottom = document.getElementById('confirmationMessage2digitBottom');
+            // Run Top
+            pageRunTop = document.getElementById('pageRunTop');
+            numberInputRunTop = document.getElementById('numberInputRunTop');
+            priceInputRunTop = document.getElementById('priceInputRunTop');
+            btnAddRunTop = document.getElementById('btnAddRunTop');
+            btnLimitRunTop = document.getElementById('btnLimitRunTop');
+            btnExportRunTop = document.getElementById('btnExportRunTop');
+            tableBodyRunTop = document.getElementById('lottoTableBodyRunTop');
+            tableFooterRunTop = document.getElementById('lottoTableFooterRunTop');
+            limitIndicatorRunTop = document.getElementById('limitIndicatorRunTop');
+            confirmationMessageRunTop = document.getElementById('confirmationMessageRunTop');
+            // Run Bottom
+            pageRunBottom = document.getElementById('pageRunBottom');
+            numberInputRunBottom = document.getElementById('numberInputRunBottom');
+            priceInputRunBottom = document.getElementById('priceInputRunBottom');
+            btnAddRunBottom = document.getElementById('btnAddRunBottom');
+            btnLimitRunBottom = document.getElementById('btnLimitRunBottom');
+            btnExportRunBottom = document.getElementById('btnExportRunBottom');
+            tableBodyRunBottom = document.getElementById('lottoTableBodyRunBottom');
+            tableFooterRunBottom = document.getElementById('lottoTableFooterRunBottom');
+            limitIndicatorRunBottom = document.getElementById('limitIndicatorRunBottom');
+            confirmationMessageRunBottom = document.getElementById('confirmationMessageRunBottom');
+            // Run 2 Top
+            pageRun2Top = document.getElementById('pageRun2Top');
+            numberInputRun2Top = document.getElementById('numberInputRun2Top');
+            priceInputRun2Top = document.getElementById('priceInputRun2Top');
+            btnAddRun2Top = document.getElementById('btnAddRun2Top');
+            btnLimitRun2Top = document.getElementById('btnLimitRun2Top');
+            btnExportRun2Top = document.getElementById('btnExport2Top');
+            tableBodyRun2Top = document.getElementById('lottoTableBodyRun2Top');
+            tableFooterRun2Top = document.getElementById('lottoTableFooter2Top');
+            limitIndicatorRun2Top = document.getElementById('limitIndicatorRun2Top');
+            confirmationMessageRun2Top = document.getElementById('confirmationMessageRun2Top');
+            // Pack 4
+            pagePack4 = document.getElementById('pagePack4');
+            numberInputPack4 = document.getElementById('numberInputPack4');
+            priceInputPack4 = document.getElementById('priceInputPack4');
+            btnAddPack4 = document.getElementById('btnAddPack4');
+            btnLimitPack4 = document.getElementById('btnLimitPack4');
+            btnExportPack4 = document.getElementById('btnExportPack4');
+            tableBodyPack4 = document.getElementById('lottoTableBodyPack4');
+            tableFooterPack4 = document.getElementById('lottoTableFooter4');
+            limitIndicatorPack4 = document.getElementById('limitIndicatorPack4');
+            confirmationMessagePack4 = document.getElementById('confirmationMessagePack4');
+            // Pack 5
+            pagePack5 = document.getElementById('pagePack5');
+            numberInputPack5 = document.getElementById('numberInputPack5');
+            priceInputPack5 = document.getElementById('priceInputPack5');
+            btnAddPack5 = document.getElementById('btnAddPack5');
+            btnLimitPack5 = document.getElementById('btnLimitPack5');
+            btnExportPack5 = document.getElementById('btnExportPack5');
+            tableBodyPack5 = document.getElementById('lottoTableBodyPack5');
+            tableFooterPack5 = document.getElementById('lottoTableFooter5');
+            limitIndicatorPack5 = document.getElementById('limitIndicatorPack5');
+            confirmationMessagePack5 = document.getElementById('confirmationMessagePack5');
+            // Export Page
+            pageExport = document.getElementById('pageExport');
+            exportPage3digit = document.getElementById('exportPage3digit');
+            exportPage2digitTop = document.getElementById('exportPage2digitTop');
+            exportPage2digitBottom = document.getElementById('exportPage2digitBottom');
+            exportPageRunTop = document.getElementById('exportPageRunTop');
+            exportPageRunBottom = document.getElementById('exportPageRunBottom');
+            exportPageRun2Top = document.getElementById('exportPageRun2Top');
+            exportPagePack4 = document.getElementById('exportPagePack4');
+            exportPagePack5 = document.getElementById('exportPagePack5');
+            exportAllTablesBtn = document.getElementById('exportAllTablesBtn');
+            // Modals
+            priceModal = document.getElementById('priceModal');
+            modalTitle = document.getElementById('modalTitle');
+            modalPrompt = document.getElementById('modalPrompt');
+            modalPermutationsContainer = document.getElementById('modalPermutationsContainer');
+            modalPermutationsList = document.getElementById('modalPermutationsList');
+            checkAllPermsCheckbox = document.getElementById('checkAllPerms');
+            mainModalPriceContainer = document.getElementById('mainModalPriceContainer');
+            modalPriceInput = document.getElementById('modalPriceInput');
+            modalOkBtn = document.getElementById('modalOkBtn');
+            modalCancelBtn = document.getElementById('modalCancelBtn');
+            editModal = document.getElementById('editModal');
+            editModalTitle = document.getElementById('editModalTitle');
+            editStraightInput = document.getElementById('editStraightInput');
+            editBoxedInput = document.getElementById('editBoxedInput');
+            editBoxedContainer = document.getElementById('editBoxedContainer');
+            editModalOkBtn = document.getElementById('editModalOkBtn');
+            editModalCancelBtn = document.getElementById('editModalCancelBtn');
+            // Boxed Modal
+            boxedModal = document.getElementById('boxedModal');
+            boxedModalTitle = document.getElementById('boxedModalTitle');
+            boxedModalStraightCheck = document.getElementById('boxedModalStraightCheck');
+            boxedModalStraightPriceInput = document.getElementById('boxedModalStraightPriceInput');
+            boxedModalBoxedCheck = document.getElementById('boxedModalBoxedCheck');
+            boxedModalBoxedPriceInput = document.getElementById('boxedModalBoxedPriceInput');
+            boxedModalOkBtn = document.getElementById('boxedModalOkBtn');
+            boxedModalCancelBtn = document.getElementById('boxedModalCancelBtn');
+            // Grand Total Summary
+            grandTotalSummarySection = document.getElementById('grandTotalSummarySection');
+            userIdDisplay = document.getElementById('userIdDisplay');
+            // Close Numbers
+            closeNumberInput = document.getElementById('closeNumberInput');
+            btnAddCloseNumber = document.getElementById('btnAddCloseNumber');
+            btnDeleteAllCloseNumbers = document.getElementById('btnDeleteAllCloseNumbers');
+            closeNumbersTableBody = document.getElementById('closeNumbersTableBody');
+            confirmationMessageCloseNumbers = document.getElementById('confirmationMessageCloseNumbers');
+            // Close Numbers 2 Digit
+            closeNumberInput2digit = document.getElementById('closeNumberInput2digit');
+            btnAddCloseNumber2digit = document.getElementById('btnAddCloseNumber2digit');
+            btnDeleteAllCloseNumbers2digit = document.getElementById('btnDeleteAllCloseNumbers2digit');
+            closeNumbersTableBody2digit = document.getElementById('closeNumbersTableBody2digit');
+            confirmationMessageCloseNumbers2digit = document.getElementById('confirmationMessageCloseNumbers2digit');
+            // Generic Modal
+            genericModal = document.getElementById('genericModal');
+            genericModalTitle = document.getElementById('genericModalTitle');
+            genericModalMessage = document.getElementById('genericModalMessage');
+            genericModalOkBtn = document.getElementById('genericModalOkBtn');
+            genericModalCancelBtn = document.getElementById('genericModalCancelBtn');
+            // Customer Total Comparison
+            customerTotalInput = document.getElementById('customerTotalInput');
+            compareTotalsBtn = document.getElementById('compareTotalsBtn');
+            comparisonResultDisplay = document.getElementById('comparisonResultDisplay');
+            // Large Amount Confirmation Setting
+            largeAmountConfirmThresholdInput = document.getElementById('largeAmountConfirmThresholdInput');
+            setLargeAmountConfirmThresholdBtn = document.getElementById('setLargeAmountConfirmThresholdBtn');
+            largeAmountConfirmThresholdDisplay = document.getElementById('largeAmountConfirmThresholdDisplay');
+
+            // NEW: Buy Numbers Page elements
+            menuBuyNumbers = document.getElementById('menuBuyNumbers');
+            pageBuyNumbers = document.getElementById('pageBuyNumbers');
+            customerNameInput = document.getElementById('customerNameInput');
+            currentCustomerTotalDisplay = document.getElementById('currentCustomerTotalDisplay');
+            currentCustomerTotalAmount = document.getElementById('currentCustomerTotalAmount');
+            buyPageTypeSelector = document.getElementById('buyPageTypeSelector');
+            buyNumberInput = document.getElementById('buyNumberInput');
+            buyPriceInput = document.getElementById('buyPriceInput');
+            btnBuyStraight = document.getElementById('btnBuyStraight');
+            btnBuyBoxed = document.getElementById('btnBuyBoxed');
+            btnBuyReversed = document.getElementById('btnBuyReversed');
+            confirmationMessageBuyNumbers = document.getElementById('confirmationMessageBuyNumbers');
+            currentCustomerSummaryDiv = document.getElementById('currentCustomerSummaryDiv');
+            currentCustomerNameDisplay = document.getElementById('currentCustomerNameDisplay');
+            currentCustomerEntriesList = document.getElementById('currentCustomerEntriesList');
+            btnCloseCustomer = document.getElementById('btnCloseCustomer');
+            btnNewCustomer = document.getElementById('btnNewCustomer');
+            buyCustomerCheckTotalInput = document.getElementById('buyCustomerCheckTotalInput');
+            btnBuyCompareCustomerTotal = document.getElementById('btnBuyCompareCustomerTotal');
+            buyComparisonResultDisplay = document.getElementById('buyComparisonResultDisplay');
+            allCustomersSummaryContainer = document.getElementById('allCustomersSummaryContainer');
+            quickAddPriceButtonsContainer = document.getElementById('quickAddPriceButtons'); // Assign the new container
+
+
+            // Setup event listeners for all parts
+            setupGenericModalListeners();
+            setupPriceModalListeners();
+            setupBoxedModalListeners();
+            setupEditModalListeners();
+            setupDropdownMenuListeners();
+
+            // Attach click listeners to menu items
+            menuItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const menuId = e.currentTarget.id;
+                    setActiveMenu(menuId);
+                });
+            });
+
+            // Set up listeners for each lotto type page
+            const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
+            allTypes.forEach(type => {
+                setupAddNumberListeners(type);
+                setupEditDeleteListeners(type);
+            });
+
+            setupCloseNumbersListeners();
+            setupCloseNumbers2digitListeners();
+            setupExportPageListeners();
+            setupBuyNumbersPageListeners();
+
+            // Set initial active menu
+            setActiveMenu('menuBuyNumbers'); // Start on the new Buy Numbers page
+
+            areUILoadedAndListenersSetup = true;
+            console.log("All UI Listeners Setup.");
+        }
+
+        // Function to update UI elements based on current data (can be called multiple times)
+        async function updateUIWithCurrentData() {
+            console.log("Updating UI with current data...");
+            const allTypes = ['3digit', '2digitTop', '2digitBottom', 'RunTop', 'RunBottom', 'Run2Top', 'Pack4', 'Pack5'];
+            for (const type of allTypes) {
+                await updateTable(type);
+                updateLimitIndicator(type);
+            }
+            updateGrandTotalSummary();
+            updateCloseNumbersTable();
+            updateCloseNumbersTable2digit();
+            updateLargeAmountConfirmThresholdDisplay();
+            await updateAllCustomersSummaryDisplay();
+            updateCurrentCustomerSummaryDisplay();
+            console.log("UI updated with current data.");
+        }
+
+        // Main initialization function called after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            setupAllUIListeners(); // Setup listeners once
+            initializeFirebase(); // Start Firebase init, which will then load data and update UI
+        });
+
+        // Function to load initial data and then trigger UI update
+        async function loadInitialDataAndInitializeUI() {
+            console.log("Loading initial data and then updating UI...");
+            const loadedData = await loadAllLottoDataFromFirestore();
+
+            // Populate global variables with loaded data
+            lottoData3digit = loadedData.lottoData_3digit || {};
+            lottoData2digitTop = loadedData.lottoData_2digitTop || {};
+            lottoData2digitBottom = loadedData.lottoData_2digitBottom || {};
+            lottoDataRunTop = loadedData.lottoData_RunTop || {};
+            lottoDataRunBottom = loadedData.lottoData_RunBottom || {};
+            lottoDataRun2Top = loadedData.lottoData_Run2Top || {};
+            lottoDataPack4 = loadedData.lottoData_Pack4 || {};
+            lottoDataPack5 = loadedData.lottoData_Pack5 || {};
+            limitThresholds = loadedData.limitThresholds || {};
+            closedNumbers = loadedData.closedNumbers || [];
+            closedNumbers2digit = loadedData.closedNumbers2digit || [];
+            allCustomerBuyData = loadedData.allCustomerBuyData || {};
+
+            await updateUIWithCurrentData(); // Update UI with loaded data
+            console.log("Initial data loaded and UI initialized.");
+        }
+
+    </script>
+</body>
+</html>
